@@ -6,5 +6,8 @@ updates:
       interval: "daily"
     assignees:
       - "coder-tavi"
+    reviewers:
+      - "coder-tavi"
     commit-message:
-      prefix: "dependabot:"
+      prefix: "m-packages:"
+      prefix-development: "d-packages:"
