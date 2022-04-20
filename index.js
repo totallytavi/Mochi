@@ -76,7 +76,7 @@ client.models = sequelize.models;
     console.info("[APP-CMD] Started refreshing application (/) commands.");
 
     await rest.put(
-      Routes.applicationGuildCommands(config.bot.applicationId, config.bot.devServerId),
+      Routes.applicationGuildCommands(config.bot.applicationId, config.bot.guildId),
       { body: slashCommands }
     );
     

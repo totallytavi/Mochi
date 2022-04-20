@@ -33,7 +33,7 @@ Once done, you need to create a `config.json` file. A template is provided below
 {
   "bot": {
     "applicationId": "",
-    "devServerId": "",
+    "guildId": "",
     "token": ""
   },
   "discord": {
