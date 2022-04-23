@@ -62,7 +62,7 @@ module.exports = {
     if(punishment.type === "BAN") {
       interaction.guild.bans.remove(punishment.userId, reason)
         .then((u) => {
-          interactionEmbed(1, `Removed case \`${caseId}\` from the database. Reverted ban of \`${u.tag}\` (\`${u.id}\`)`, interaction, client, [true, 10]);
+          interactionEmbed(1, `Removed case \`${caseId}\` from the database. Reverted ban of \`${u.tag}\` (\`${u.id}\`)`, "", interaction, client, [true, 10]);
         }, (e) => {
           interactionEmbed(3, "[ERR-UNK]", `An unknown error occured while removing the ban from the server: ${e.message}`, interaction, client, [true, 10]);
         });
@@ -70,12 +70,12 @@ module.exports = {
       interaction.guild.members.fetch(punishment.userId)
         .then((u) => {
           u.timeout(null, reason + ` (Moderator ID: ${interaction.user.id})`);
-          interactionEmbed(1, `Removed case \`${caseId}\` from the database. Reverted mute of \`${u.tag}\` (\`${u.id}\`)`, interaction, client, [true, 10]);
+          interactionEmbed(1, `Removed case \`${caseId}\` from the database. Reverted mute of \`${u.tag}\` (\`${u.id}\`)`, "", interaction, client, [true, 10]);
         }, (e) => {
           interactionEmbed(3, "[ERR-UNK]", `An unknown error occured while removing the mute from the server: ${e.message}`, interaction, client, [true, 10]);
         });
     } else {
-      interactionEmbed(1, `Removed case \`${caseId}\` from the database`, interaction, client, [true, 10]);
+      interactionEmbed(1, `Removed case \`${caseId}\` from the database`, "", interaction, client, [true, 10]);
     }
   }
 };

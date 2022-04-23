@@ -51,16 +51,14 @@ module.exports = {
 
     if(options.getBoolean("mod_history")) {
       let punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id, deleted: false } });
-      for(const role of config.discord.devRoles) {
-        if(member.roles.cache.has(role)) punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id } });
-      }
+      if(member.roles.cache.has(config.discord.devRole)) punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id } });
       const embed2 = new MessageEmbed();
       if(punishments.length > 0) {
         embed2.setTitle(`Information on ${member.user.tag} (${member.user.id})`);
         embed2.setColor(punishments.length < 5 ? 0xFFA500 : 0xFF0000);
         punishments.forEach(async (punishment, index) => {
           // eslint-disable-next-line no-useless-escape
-          embed2.addFields({ name: `Punishment ${index + 1} (Case #${punishment.caseId})`, value: `${punishment.deleted ? "`❌`" : ""} ${punishment.type.charAt(0) + punishment.type.slice(1).toLowerCase()} on <t:${new Date(punishment.createdAt).getTime()/1000}> (${punishment.active ? "Active" : "Inactive"})`, inline: true });
+          embed2.addFields({ name: `Punishment ${index + 1} (Case #${punishment.caseId})`, value: `${member.roles.cache.has(config.discord.devRole) ? punishment.deleted ? "`❌`" : "" : ""} ${punishment.type.charAt(0) + punishment.type.slice(1).toLowerCase()} on <t:${new Date(punishment.createdAt).getTime()/1000}> (${punishment.active ? "Active" : "Inactive"})`, inline: true });
         });
       } else {
         embed2.setColor(0x00FF00);
