@@ -48,6 +48,7 @@ module.exports = {
     ]);
 
     interaction.editReply({ embeds: [embed] });
+    await require("util").promisify(setTimeout)(5e2);
 
     if(options.getBoolean("mod_history")) {
       let punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id, deleted: false } });
@@ -65,6 +66,7 @@ module.exports = {
         embed2.setDescription(`${member.user.tag} has no punishments`);
         embed2.setFooter({ text: `ID: ${member.user.id}` });
       }
+      await require("util").promisify(setTimeout)(15e2);
       // Since moderation history may be sensitive, make sure it's ephemeral
       interaction.followUp({ embeds: [embed2], ephemeral: true });
     }
