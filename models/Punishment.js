@@ -15,6 +15,10 @@ module.exports.import = (sequelize) => sequelize.define("Punishment", {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  guildId: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
   // Valid values: WARN, MUTE, KICK, BAN
   type: {
     type: DataTypes.TEXT,
@@ -34,6 +38,10 @@ module.exports.import = (sequelize) => sequelize.define("Punishment", {
   },
   reason: {
     type: DataTypes.STRING,
-    allownull: false,
+    allowNull: false,
+  },
+  revertReason: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 });

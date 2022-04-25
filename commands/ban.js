@@ -35,7 +35,7 @@ module.exports = {
    */
   run: async (client, interaction, options) => {
     const user = options.getMember("user");
-    const reason = options.getString("reason") ?? "None";
+    const reason = options.getString("reason") ?? "No reason specified";
     let error = false;
 
     //#region Validation
@@ -66,6 +66,7 @@ module.exports = {
       await client.models.Punishment.create({
         userId: user.id,
         modId: interaction.user.id,
+        guildId: interaction.guild.id,
         type: "BAN",
         endsAt: new Date(Date.now() + duration), 
         active: true,

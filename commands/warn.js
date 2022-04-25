@@ -29,7 +29,7 @@ module.exports = {
    */
   run: async (client, interaction, options) => {
     const user = options.getMember("user");
-    const reason = options.getString("reason") ?? "None";
+    const reason = options.getString("reason") ?? "No reason specified";
     let error = false;
 
     //#region Validation

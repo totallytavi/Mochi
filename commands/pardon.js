@@ -30,7 +30,7 @@ module.exports = {
    */
   run: async (client, interaction, options) => {
     const caseId = options.getInteger("case_id");
-    const reason = options.getString("reason") ?? "No reason provided";
+    const reason = options.getString("reason") ?? "No reason specified";
     let error = false;
 
     // Check if the case exists
@@ -44,7 +44,7 @@ module.exports = {
 
     // Remove the punishment
     try {
-      await client.models.Punishment.update({ deleted: true }, { where: { caseId: caseId } });
+      await client.models.Punishment.update({ revertReason: reason, deleted: true }, { where: { caseId: caseId } });
     } catch(e) {
       error = true;
       if(!e.errors) {

@@ -51,7 +51,7 @@ module.exports = {
     await require("util").promisify(setTimeout)(5e2);
 
     if(options.getBoolean("mod_history")) {
-      let punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id, deleted: false } });
+      let punishments = await client.models.Punishment.findAll({ where: { guildId: interaction.guild.id, userId: member.user.id, deleted: false } });
       if(member.roles.cache.has(config.discord.devRole)) punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id } });
       const embed2 = new MessageEmbed();
       if(punishments.length > 0) {
