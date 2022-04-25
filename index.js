@@ -76,12 +76,12 @@ client.models = sequelize.models;
     console.info("[APP-CMD] Started refreshing application (/) commands.");
 
     await rest.put(
-      Routes.applicationGuildCommands(config.bot.applicationId, config.bot.guildId),
+      Routes.applicationCommands(config.bot.applicationId),
       { body: slashCommands }
     );
     
     const then = Date.now();
-    console.info(`[APP-CND] Successfully reloaded application (/) commands after ${then - now}ms.`);
+    console.info(`[APP-CMD] Successfully reloaded application (/) commands after ${then - now}ms.`);
     console.info(table.toString());
   } catch(error) {
     console.error("[APP-CMD] An error has occurred while attempting to refresh application commands.");
@@ -99,7 +99,7 @@ client.on("ready", async () => {
   console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
   toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, "client.on(ready)", client);
   // Set the status to new Date();
-  client.user.setActivity(`${client.guilds.cache.size} server since ${new Date().toLocaleTimeString()}`, { type: "WATCHING" });
+  client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size}`, { type: "LISTENING" });
 
   try {
     await sequelize.authenticate();
