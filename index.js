@@ -36,7 +36,7 @@ if(!fs.existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: ["GUILDS","GUILD_MEMBERS","GUILD_MESSAGES"]
+  intents: ["GUILDS","GUILD_BANS","GUILD_MEMBERS"]
 });
 const slashCommands = [];
 client.commands = new Collection();
@@ -99,7 +99,8 @@ client.on("ready", async () => {
   console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
   toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, "client.on(ready)", client);
   // Set the status to new Date();
-  client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size}`, { type: "LISTENING" });
+  client.guilds.cache.each(g => g.members.fetch());
+  client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
 
   try {
     await sequelize.authenticate();
@@ -111,6 +112,11 @@ client.on("ready", async () => {
     console.error(e);
     process.exit(16);
   }
+
+  setInterval(() => {
+    client.guilds.cache.each(g => g.members.fetch());
+    client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
+  }, 60000);
 });
 
 client.on("interactionCreate", async (interaction) => {
