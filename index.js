@@ -62,8 +62,8 @@ client.models = sequelize.models;
         table.addRow(command.name, "Loaded");
       }
     } catch(e) {
-      console.info(`[FILE-LOAD] Unloaded: ${file}`);
-      console.info(`[FILE-LOAD] ${e}`);
+      console.warn(`[FILE-LOAD] Unloaded: ${file}`);
+      console.warn(`[FILE-LOAD] ${e}`);
       table.addRow(file, "Unloaded");
     }
   }

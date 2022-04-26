@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
 const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
-const { interactionEmbed } = require("../functions");
+const { interactionEmbed } = require("../functions.js");
 // Moment isn't technically needed. It's required because Date constructors convert dates to your local timezone.
 const moment = require("moment");
 const config = require("../config.json");
@@ -37,6 +37,7 @@ module.exports = {
     const embed = new MessageEmbed({
       color: Math.floor(Math.random() * 16777215)
     });
+    const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
     embed.setTitle(`Information on ${member.user.tag}`);
     embed.setDescription(`User ID: ${member.user.id}`);
     embed.setThumbnail(member.user.displayAvatarURL({ format: "png", size: 2048, dynamic: true }));
@@ -44,7 +45,7 @@ module.exports = {
       { name: "Register Date", value: String(moment(member.user.createdAt)._i), inline: true },
       { name: "Join Date", value: String(moment(member.joinedAt)._i), inline: true },
       { name: "Nickname", value: `${member.nickname || "None"}`, inline: true },
-      { name: "Roles", value: `${member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone).map(r => r.toString()).join(", ") || "None"}`, inline: false },
+      { name: "Roles", value: `${roles.length > 1024 ? roles : "Too many roles!"}`, inline: false },
     ]);
 
     interaction.editReply({ embeds: [embed] });

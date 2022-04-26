@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
 const { Client, CommandInteraction, CommandInteractionOptionResolver } = require("discord.js");
-const { interactionEmbed, parseTime } = require("../functions");
+const { interactionEmbed, parseTime } = require("../functions.js");
 const config = require("../config.json");
 
 module.exports = {
