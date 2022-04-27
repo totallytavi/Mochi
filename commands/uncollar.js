@@ -28,11 +28,12 @@ module.exports = {
     if(!discMember) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
 
     // Make sure the user is not already collared with that user
-    const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id, owner: interaction.user.id } });
-    if(check === null) return interactionEmbed(3, "[ERR-ARGS]", "That user isn't collared by you", interaction, client, [true, 10]);
+    const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id } });
+    if(check === null) return interactionEmbed(3, "[ERR-ARGS]", "That user isn't collared by anyone", interaction, client, [true, 10]);
+    if(check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar users that yourself or those you've collared", interaction, client, [true, 10]);
 
     // Confirmation
-    const confirmation = await awaitButtons(interaction, 15, [new MessageButton({ customId: "yes", label: "Yes", style: "DANGER" }), new MessageButton({ customId: "no", label: "No", style: "PRIMARY" })], "Are you sure you wish to uncollar that user?", [true, 10]);
+    const confirmation = await awaitButtons(interaction, 15, [new MessageButton({ customId: "yes", label: "Yes", style: "DANGER" }), new MessageButton({ customId: "no", label: "No", style: "PRIMARY" })], `Are you sure you want to uncollar ${check.owner === interaction.user.id ? "your pet" : "yourself"}?`, [true, 10]);
     await confirmation.deleteReply();
     if(confirmation === null || confirmation.customId === "no") {
       return interactionEmbed(4, "Cancelled the command", "", interaction, client, [true, 10]);
