@@ -32,7 +32,7 @@ module.exports = {
     // Make sure the user is not already collared with that user
     const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id } });
     if(check != null) return interactionEmbed(3, "[ERR-ARGS]", "That user is already collared", interaction, client, [true, 10]);
-    if(check.owner === discMember.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You cannot collar your owner!", interaction, client, [true, 10]);
+    if(check != null && check.owner === discMember.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You cannot collar your owner!", interaction, client, [true, 10]);
 
     // Create a collar
     try {
