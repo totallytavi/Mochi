@@ -38,8 +38,10 @@ module.exports = {
       color: Math.floor(Math.random() * 16777215)
     });
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
+    const collar = await client.models.Collar.findOne({ where: { collared: member.user.id } });
     embed.setTitle(`Information on ${member.user.tag}`);
-    embed.setDescription(`User ID: ${member.user.id}`);
+    embed.setDescription(collar === null ? "This user is uncollared!" : `<:PinkCollar:968663386881687572> Owned by <@${collar.owner}>`);
+    embed.setFooter({ text: `ID: ${member.user.id}` });
     embed.setThumbnail(member.user.displayAvatarURL({ format: "png", size: 2048, dynamic: true }));
     embed.addFields([
       { name: "Register Date", value: String(moment(member.user.createdAt)._i), inline: true },
@@ -65,7 +67,6 @@ module.exports = {
       } else {
         embed2.setColor(0x00FF00);
         embed2.setDescription(`${member.user.tag} has no punishments`);
-        embed2.setFooter({ text: `ID: ${member.user.id}` });
       }
       await require("util").promisify(setTimeout)(15e2);
       // Since moderation history may be sensitive, make sure it's ephemeral

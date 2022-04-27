@@ -1,4 +1,4 @@
-const { Client, Collection } = require("discord.js");
+const { Client, Collection, Message } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { Sequelize } = require("sequelize");
 const { Routes } = require("discord-api-types/v9");
@@ -126,20 +126,22 @@ client.on("interactionCreate", async (interaction) => {
   if(interaction.isCommand()) {
     let command = client.commands.get(interaction.commandName);
     if(command) {
-      await interaction.deferReply({ ephemeral: command.ephemeral });
+      await wait(1e3);
+      // Defer if no response has been made
+      if(!interaction.deferred && !interaction.replied && (await interaction.fetchReply()) instanceof Message === false) await interaction.deferReply({ ephemeral: command.ephemeral });
       command.run(client, interaction, interaction.options)
         .catch((e) => {
           interaction.editReply("Something went wrong while executing the command. Please report this to <@409740404636909578> (Tavi#0001)");
           toConsole(e.stack, `command.run(${command.name})`, client);
         });
     }
-    await wait(10000);
-    await interaction.fetchReply()
+    await wait(1e4);
+    interaction.fetchReply()
       .then(m => {
         if(m.content === "" && m.embeds.length === 0) interactionEmbed(3, "[ERR-UNK]", "The command timed out and failed to reply in 10 seconds", interaction, client, [true, 15]);
       });
   } else {
-    await interaction.deferReply();
+    interaction.deferReply();
   }
 });
 //#endregion
@@ -148,7 +150,6 @@ client.login(config.bot.token);
 
 //#region Error handling
 process.on("uncaughtException", (err, origin) => {
-  console.info(origin);
   if(!ready) {
     console.warn("Exiting due to a [unhandledRejection] during start up");
     console.error(err);
@@ -163,6 +164,7 @@ process.on("unhandledRejection", (promise) => {
     console.error(promise);
     return process.exit(15);
   }
+  if(String(promise).includes("Interaction has already been acknowledged.")) return;
   toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, "process.on('unhandledRejection')", client);
 });
 process.on("warning", async (warning) => {
