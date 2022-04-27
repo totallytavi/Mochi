@@ -1,4 +1,4 @@
-const { Client, Collection, Message } = require("discord.js");
+const { Client, Collection } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { Sequelize } = require("sequelize");
 const { Routes } = require("discord-api-types/v9");
@@ -128,7 +128,7 @@ client.on("interactionCreate", async (interaction) => {
     if(command) {
       await wait(1e3);
       // Defer if no response has been made
-      if(!interaction.deferred && !interaction.replied && (await interaction.fetchReply()) instanceof Message === false) await interaction.deferReply({ ephemeral: command.ephemeral });
+      if(!interaction.deferred && !interaction.replied) await interaction.deferReply({ ephemeral: command.ephemeral });
       command.run(client, interaction, interaction.options)
         .catch((e) => {
           interaction.editReply("Something went wrong while executing the command. Please report this to <@409740404636909578> (Tavi#0001)");
