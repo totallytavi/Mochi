@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction, CommandInteraction } = require("discord.js");
+const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, SelectMenuInteraction } = require("discord.js");
+// eslint-disable-next-line no-unused-vars
+const { SelectMenuOptionData } = require("./classes/SelectMenuOptionData");
 const config = require("./config.json");
 
 const errors = {
@@ -57,7 +59,7 @@ module.exports = {
    * @returns {null} 
    */
   interactionEmbed: async function(type, content, expected, interaction, client, remove) {
-    if(!type || !content || expected === undefined || !interaction || !client || !remove || remove.length != 2) throw new SyntaxError(`One or more of the required parameters are missing in [interactionEmbed]\n\n> ${type}\n> ${content}\n> ${expected}\n> ${interaction}\n> ${client}`);
+    if(!type || typeof content != "string" || expected === undefined || !interaction || !client || !remove || remove.length != 2) throw new SyntaxError(`One or more of the required parameters are missing in [interactionEmbed]\n\n> ${type}\n> ${content}\n> ${expected}\n> ${interaction}\n> ${client}`);
     if(!interaction.deferred) await interaction.deferReply();
     const embed = new MessageEmbed();
 
@@ -67,7 +69,7 @@ module.exports = {
         .setTitle("Success")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
-        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
+        .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with no errors" })
         .setTimestamp();
   
@@ -77,7 +79,7 @@ module.exports = {
         .setTitle("Warning")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("ORANGE")
-        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
+        .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with a minor error" })
         .setTimestamp();
   
@@ -97,7 +99,7 @@ module.exports = {
         .setTitle("Information")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
-        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
+        .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation is pending completion" })
         .setTimestamp();
   
@@ -141,7 +143,7 @@ module.exports = {
     }
     // Step 5: Cleanup
     setTimeout(() => {
-      if(!message && !message.deleted && remove && res != null) message.delete();
+      if(message != undefined && !message.deleted && remove && res != null) message.delete();
     }, 1500);
     await message.edit({ content: content, components: [] });
     return res;
@@ -151,7 +153,7 @@ module.exports = {
    * @param {Interaction} interaction Interaction object
    * @param {Number} time Seconds for which the menu is valid
    * @param {Number[]} values [min, max] The amount of values that can be selected
-   * @param {MessageSelectOptionData|MessageSelectOptionData[]} options The options for the menu
+   * @param {SelectMenuOptionData|SelectMenuOptionData[]} options The options for the menu
    * @param {String|null} content The content to display, can be blank
    * @param {Boolean} remove Delete the message after the time expires
    * @example awaitMenu(interaction, 15, [menu], `Select an option`, true);
@@ -191,7 +193,7 @@ module.exports = {
 
     // Step 5: Cleanup
     setTimeout(() => {
-      if(!message && !message.deleted && remove && res != null) message.delete();
+      if(message != undefined && !message.deleted && remove && res != null) message.delete();
     }, 1500);
     await message.edit({ content: content, components: [] });
     return res;

@@ -36,7 +36,13 @@ if(!fs.existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: ["GUILDS","GUILD_BANS","GUILD_MEMBERS"]
+  intents: ["GUILDS","GUILD_BANS","GUILD_MEMBERS","GUILD_MESSAGES"],
+  sweepers: {
+    "messages": {
+      lifetime: 10,
+      interval: 15
+    }
+  }
 });
 const slashCommands = [];
 client.commands = new Collection();
