@@ -41,7 +41,7 @@ module.exports = {
 
     // Remove the collar
     try {
-      await client.models.Collar.delete({ where: { collared: discMember.user.id } });
+      await client.models.Collar.destroy({ where: { collared: discMember.user.id } });
     } catch(e) {
       error = true;
       if(!e.errors) {
