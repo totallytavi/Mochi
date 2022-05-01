@@ -201,8 +201,8 @@ client.on("messageCreate", async (message) => {
         }, 5e3);
       });
   }
-  // Password
-  if(settings.password != " " && message.content != settings.password) {
+  // VerificationPhrase
+  if(settings.verificationPhrase != " " && message.content != settings.verificationPhrase) {
     reactions.each(r => r.remove());
     return message.channel.send({ content: "`❌` The password is incorrect", target: message })
       .then(m => {

@@ -26,7 +26,7 @@ module.exports = {
      * @param {CommandInteractionOptionResolver} options
      */
   run: async (client, interaction, options) => {
-    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null) await client.models.Setting.create({ guildId: interaction.guild.id, autoVerify: false, verificationChannel: " ", addRoles: " ", removeRoles: " ", rolesRequired: 0, introChannel: " ", password: " " });
+    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null) await client.models.Setting.create({ guildId: interaction.guild.id, autoVerify: false, verificationChannel: " ", addRoles: " ", removeRoles: " ", rolesRequired: 0, introChannel: " ", verificationPhrase: " " });
     const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
     const subcommand = options.getSubcommand();
     const filter = (m) => m.author.id === interaction.user.id;
@@ -43,7 +43,7 @@ module.exports = {
         description: `Settings for \`${interaction.guild.name}\``,
         fields: [
           { name: "Auto Verify", value: settings.autoVerify === true ? "Enabled" : "Disabled", inline: true },
-          { name: "Password", value: settings.password === " " ? "(None set)" : `||${settings.password}||`, inline: true },
+          { name: "Password", value: settings.verificationPhrase === " " ? "(None set)" : `||${settings.verificationPhrase}||`, inline: true },
           { name: "Verification Channel", value: settings.verificationChannel === " " ? "No channel" : `<#${settings.verificationChannel}>`, inline: true },
           { name: "Intro Channel", value: settings.introChannel === " " ? "No channel" : `<#${settings.introChannel}>`, inline: true },
           { name: "Roles Required", value: String(settings.rolesRequired), inline: true },
@@ -90,7 +90,7 @@ module.exports = {
         password.first().delete();
         if(password.first().content === "(None set)") return interactionEmbed(3, "[ERR-ARGS]", "You cannot use the default password", interaction, client, [true, 10]);
         if(password.first().content.length > 32) return interactionEmbed(3, "[ERR-ARGS]", "Your password is too long (Max: 32 characters)", interaction, client, [true, 10]);
-        await client.models.Setting.update({ password: password.first().content }, { where: { guildId: interaction.guild.id } });
+        await client.models.Setting.update({ verificationPhrase: password.first().content }, { where: { guildId: interaction.guild.id } });
         interactionEmbed(1, "", `Successfully set the password to \`${password.first().content}\``, interaction, client, [true, 15]);
       } else if(option.values[0] === "addRoles") {
         await interaction.editReply({ content: "Please mention the roles (Separated by commas) to add when a user says the password" });
