@@ -29,10 +29,11 @@ module.exports = {
    */
   toConsole: async (message, source, client) => {
     if(!message || !source || !client) return console.error(`One or more of the required parameters are missing.\n\n> message: ${message}\n> source: ${source}\n> client: ${client}`);
-    if(!client.channels.cache.get(config.discord.devChannel)) return console.warn("[WARN] toConsole called but bot cannot find config.discord.devChannel", message, source);
+    const channel = await client.channels.cache.get(config.discord.devChannel).catch(() => { return undefined; });
+    if(!channel) return console.warn("[WARN] toConsole called but bot cannot find config.discord.devChannel", message, source);
 
-    client.channels.cache.get(config.discord.devChannel).send(`Incoming message from ${source} at <t:${Math.floor(Date.now()/1000)}:F>`);
-    client.channels.cache.get(config.discord.devChannel).send({ embeds: [
+    channel.send(`Incoming message from ${source} at <t:${Math.floor(Date.now()/1000)}:F>`);
+    channel.send({ embeds: [
       new MessageEmbed({
         title: "Message to Console",
         color: "RED",
