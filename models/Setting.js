@@ -29,7 +29,7 @@ module.exports.import = (sequelize) => sequelize.define("Setting", {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  verificationphrase: {
+  verificationPhrase: {
     type: DataTypes.TEXT,
     allowNull: false
   }
