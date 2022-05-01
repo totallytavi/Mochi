@@ -229,13 +229,13 @@ client.on("messageCreate", async (message) => {
     if(message.member.roles.cache.has(role)) continue;
     await message.member.roles.add(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
   }
-  await wait(1000); // Prevent instant sending due to rate limits and potentially outdated caches
+  await wait(250); // Prevent instant sending due to rate limits and potentially outdated caches
   await message.member.fetch();
   const removeRoles = settings.removeRoles.split(",");
   for(const role of removeRoles) {
     if(role === " ") continue;
     if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
-    if(message.member.roles.cache.has(role)) continue;
+    if(!message.member.roles.cache.has(role)) continue;
     await message.member.roles.remove(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
   }
   
