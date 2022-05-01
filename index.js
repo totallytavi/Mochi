@@ -160,7 +160,6 @@ client.on("messageCreate", async (message) => {
    */
   if(!ready) return;
   if(!message.guild) return;
-  if(message.guild.id != "773830685659496449") return;
   
   const settings = await client.models.Setting.findOne({ where: { guildId: message.guild.id } });
   if(settings === null) return;
@@ -171,7 +170,6 @@ client.on("messageCreate", async (message) => {
   // Setting validation
   if(message.channel.id != settings.verificationChannel) return;
   await message.react("🕐");
-  await wait(2e3);
   const reactions = message.reactions.cache.filter(r => r.emoji.name === "🕐");
 
   // Roles required
