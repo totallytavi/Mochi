@@ -25,6 +25,10 @@ module.exports.import = (sequelize) => sequelize.define("Setting", {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  verificationChannel: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
   password: {
     type: DataTypes.TEXT,
     allowNull: false

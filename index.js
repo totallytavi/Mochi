@@ -127,14 +127,12 @@ client.on("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
   if(!interaction.inGuild()) return interactionEmbed(4, "[WARN-NODM]", "", interaction, client, [true, 10]);
-  if(!ready) return interactionEmbed(4, "The bot is starting up, please wait", "", interaction, client, [true, 10]);
-
+  if(!ready) return interactionEmbed(4, "", "The bot is starting up, please wait", interaction, client, [true, 10]);
+  
   if(interaction.isCommand()) {
     let command = client.commands.get(interaction.commandName);
+    await interaction.deferReply({ ephemeral: command.ephemeral });
     if(command) {
-      await wait(1e3);
-      // Defer if no response has been made
-      if(!interaction.deferred && !interaction.replied) await interaction.deferReply({ ephemeral: command.ephemeral });
       command.run(client, interaction, interaction.options)
         .catch((e) => {
           interaction.editReply("Something went wrong while executing the command. Please report this to <@409740404636909578> (Tavi#0001)");
@@ -149,6 +147,103 @@ client.on("interactionCreate", async (interaction) => {
   } else {
     interaction.deferReply();
   }
+});
+
+client.on("messageCreate", async (message) => {
+  /**
+   * Conditions for automatic verification to work:
+   * - Must have auto verification enabled
+   * - Must have an introduction and verification channel
+   * - Must have VIEW_CHANNEL, SEND_MESSAGES, and ADD_REACTIONS permissions
+   * - If roles need to be managed, must have MANAGE_ROLES permissions
+   * - If there is a role that is higher than the bot, it will skip it
+   */
+  if(!ready) return;
+  if(!message.guild) return;
+  if(message.guild.id != "773830685659496449") return;
+  
+  const settings = await client.models.Setting.findOne({ where: { guildId: message.guild.id } });
+  if(settings === null) return;
+  if(message.author.bot) return;
+  if(!settings.autoVerify) return;
+  if(!message.guild.me.permissionsIn(message.channel).has(3136)) return;
+
+  // Setting validation
+  if(message.channel.id != settings.verificationChannel) return;
+  await message.react("🕐");
+  await wait(2e3);
+  const reactions = message.reactions.cache.filter(r => r.emoji.name === "🕐");
+
+  // Roles required
+  if(settings.rolesRequired != " " && message.member.roles.cache.size < settings.rolesRequired) {
+    reactions.each(r => r.remove());
+    return message.channel.send({ content: `\`❌\` You need ${settings.rolesRequired} roles to verify, you currently have ${message.member.roles.cache.size} roles`, target: message })
+      .then(m => {
+        setTimeout(() => {
+          m.delete();
+          message.delete();
+        }, 5e3);
+      });
+  }
+  // Intro channel
+  if(settings.introChannel === " ") {
+    reactions.each(r => r.remove());
+    return message.delete();
+  }
+  await client.channels.cache.get(settings.introChannel).messages.fetch();
+  if(client.channels.cache.get(settings.introChannel).messages.cache.filter(m => m.author.id === message.author.id).size < 1) {
+    reactions.each(r => r.remove());
+    return message.channel.send({ content: `\`❌\` You need an introduction posted in <#${settings.introChannel}>`, target: message })
+      .then(m => {
+        setTimeout(() => {
+          m.delete();
+          message.delete();
+        }, 5e3);
+      });
+  }
+  // Password
+  if(settings.password != " " && message.content != settings.password) {
+    reactions.each(r => r.remove());
+    return message.channel.send({ content: "`❌` The password is incorrect", target: message })
+      .then(m => {
+        setTimeout(() => {
+          m.delete();
+          message.delete();
+        }, 5e3);
+      });
+  }
+
+  // Apply roles
+  if((settings.addRoles[0] != " " || settings.removeRoles[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
+    reactions.each(r => r.remove());
+    return message.channel.send({ content: "`❌` I cannot modify roles. Please inform server staff of this issue", target: message })
+      .then(m => {
+        setTimeout(() => {
+          m.delete();
+          message.delete();
+        }, 5e3);
+      });
+  }
+  const addRoles = settings.addRoles.split(",");
+  for(const role of addRoles) {
+    if(role === " ") continue;
+    if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
+    if(message.member.roles.cache.has(role)) continue;
+    await message.member.roles.add(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
+  }
+  await wait(1000); // Prevent instant sending due to rate limits and potentially outdated caches
+  await message.member.fetch();
+  const removeRoles = settings.removeRoles.split(",");
+  for(const role of removeRoles) {
+    if(role === " ") continue;
+    if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
+    if(message.member.roles.cache.has(role)) continue;
+    await message.member.roles.remove(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
+  }
+  
+  // Remove all remaining evidence
+  reactions.each(r => r.remove());
+  return message.delete();
 });
 //#endregion
 
@@ -170,7 +265,7 @@ process.on("unhandledRejection", (promise) => {
     console.error(promise);
     return process.exit(15);
   }
-  if(String(promise).includes("Interaction has already been acknowledged.")) return;
+  if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message")) return client.channels.cache.get(config.discord.suppressChannel).send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
   toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, "process.on('unhandledRejection')", client);
 });
 process.on("warning", async (warning) => {

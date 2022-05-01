@@ -39,7 +39,8 @@ Once done, you need to create a `config.json` file. A template is provided below
   "discord": {
     "devRole": "",
     "devChannel": "",
-    "logChannel": ""
+    "logChannel": "",
+    "suppressChannel": ""
   },
   "mysql": {
     "host": "",
