@@ -9,5 +9,5 @@ updates:
     reviewers:
       - "coder-tavi"
     commit-message:
-      prefix: "m-packages:"
+      prefix: "a-packages:"
       prefix-development: "d-packages:"
