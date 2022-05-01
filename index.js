@@ -259,13 +259,15 @@ process.on("uncaughtException", (err, origin) => {
   }
   toConsole(`An [uncaughtException] has occurred.\n\n> ${err}\n> ${origin}`, "process.on('uncaughtException')", client);
 });
-process.on("unhandledRejection", (promise) => {
+process.on("unhandledRejection", async (promise) => {
   if(!ready) {
     console.warn("Exiting due to a [unhandledRejection] during start up");
     console.error(promise);
     return process.exit(15);
   }
-  if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message")) return client.channels.cache.get(config.discord.suppressChannel).send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
+  const suppressChannel = await client.channels.fetch(config.discord.suppressChannel).catch(() => { return undefined; });
+  if(!suppressChannel) return console.error(`An [unhandledRejection] has occurred.\n\n> ${promise}`);
+  if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message")) return suppressChannel.send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
   toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, "process.on('unhandledRejection')", client);
 });
 process.on("warning", async (warning) => {
