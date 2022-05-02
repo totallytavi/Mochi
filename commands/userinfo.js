@@ -47,7 +47,7 @@ module.exports = {
       { name: "Register Date", value: String(moment(member.user.createdAt)._i), inline: true },
       { name: "Join Date", value: String(moment(member.joinedAt)._i), inline: true },
       { name: "Nickname", value: `${member.nickname || "None"}`, inline: true },
-      { name: "Roles", value: `${roles.length > 1024 ? roles : "Too many roles!"}`, inline: false },
+      { name: "Roles", value: `${roles.length < 1024 ? roles : "Too many roles!"}`, inline: false },
     ]);
 
     interaction.editReply({ embeds: [embed] });
