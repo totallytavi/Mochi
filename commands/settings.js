@@ -141,7 +141,6 @@ module.exports = {
         num.first().delete();
         if(cleanNumber === "NaN") return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid number", interaction, client, [true, 10]);
         if(cleanNumber < 1 || cleanNumber > 15) return interactionEmbed(3, "[ERR-ARGS]", "Your number cannot be lower than 1 or higher than 15", interaction, client, [true, 10]);
-        console.info(cleanNumber);
         await client.models.Setting.update({ rolesRequired: cleanNumber }, { where: { guildId: interaction.guild.id } });
         interactionEmbed(1, "", `Successfully set the number of roles required to pass verification to: ${cleanNumber}`, interaction, client, [true, 20]);
       } else if(option.values[0] === "verificationChannel") {

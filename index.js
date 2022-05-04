@@ -81,10 +81,18 @@ client.models = sequelize.models;
   try {
     console.info("[APP-CMD] Started refreshing application (/) commands.");
 
-    await rest.put(
-      Routes.applicationCommands(config.bot.applicationId),
-      { body: slashCommands }
-    );
+    // Refresh based on environment
+    if(process.env.environment === "development") {
+      await rest.put(
+        Routes.applicationGuildCommands(config.bot.applicationId, config.bot.guildId),
+        { body: slashCommands }
+      );
+    } else {
+      await rest.put(
+        Routes.applicationCommands(config.bot.applicationId),
+        { body: slashCommands }
+      );
+    }
     
     const then = Date.now();
     console.info(`[APP-CMD] Successfully reloaded application (/) commands after ${then - now}ms.`);
@@ -131,7 +139,8 @@ client.on("interactionCreate", async (interaction) => {
   
   if(interaction.isCommand()) {
     let command = client.commands.get(interaction.commandName);
-    await interaction.deferReply({ ephemeral: command.ephemeral });
+    await interaction.deferReply({ ephemeral: false });
+    // await interaction.deferReply({ ephemeral: command.ephemeral });
     if(command) {
       command.run(client, interaction, interaction.options)
         .catch((e) => {
@@ -250,7 +259,7 @@ client.login(config.bot.token);
 //#region Error handling
 process.on("uncaughtException", (err, origin) => {
   if(!ready) {
-    console.warn("Exiting due to a [unhandledRejection] during start up");
+    console.warn("Exiting due to a [uncaughtException] during start up");
     console.error(err);
     console.error(origin);
     return process.exit(14);
@@ -265,7 +274,7 @@ process.on("unhandledRejection", async (promise) => {
   }
   const suppressChannel = await client.channels.fetch(config.discord.suppressChannel).catch(() => { return undefined; });
   if(!suppressChannel) return console.error(`An [unhandledRejection] has occurred.\n\n> ${promise}`);
-  if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message")) return suppressChannel.send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
+  if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message") || String(promise).includes("rCannot read properties of undefined (reading 'ephemeral')")) return suppressChannel.send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
   toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, "process.on('unhandledRejection')", client);
 });
 process.on("warning", async (warning) => {
