@@ -163,7 +163,8 @@ client.on("messageCreate", async (message) => {
    * Conditions for automatic verification to work:
    * - Must have auto verification enabled
    * - Must have an introduction and verification channel
-   * - Must have VIEW_CHANNEL, SEND_MESSAGES, and ADD_REACTIONS permissions
+   * - Need VIEW_CHANNEL, SEND_MESSAGES, MANAGE_MESSAGES, and ADD_REACTIONS in verificationChannel
+   * - Need VIEW_CHANNEL, SEND_MESSAGES, EMBED_LINKS, and ADD_FILES in welcomeChannel
    * - If roles need to be managed, must have MANAGE_ROLES permissions
    * - If there is a role that is higher than the bot, it will skip it
    */
@@ -174,23 +175,29 @@ client.on("messageCreate", async (message) => {
   if(settings === null) return;
   if(message.author.bot) return;
   if(!settings.autoVerify) return;
-  if(!message.guild.me.permissionsIn(message.channel).has(3136)) return;
 
   // Setting validation
   if(message.channel.id != settings.verificationChannel) return;
   await message.react("🕐");
   const reactions = message.reactions.cache.filter(r => r.emoji.name === "🕐");
 
+  // Permissions checks
+  if(!message.guild.me.permissionsIn(message.channel).has(11328)) {
+    reactions.each(r => r.remove());
+    return message.channel.send(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
+      .then(m => remove(7500, m, message));
+  }
+  if(settings.welcomeChannel != " " && !message.guild.me.permissionsIn(settings.welcomeChannel).has(51200)) {
+    reactions.each(r => r.remove());
+    return message.channel.send(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(settings.welcomeChannel).missing(51200).join("\n")}\`\`\``)
+      .then(m => remove(7500, m, message));
+  }
+
   // Roles required
   if(settings.rolesRequired != " " && message.member.roles.cache.size < settings.rolesRequired) {
     reactions.each(r => r.remove());
     return message.channel.send({ content: `\`❌\` You need ${settings.rolesRequired} roles to verify, you currently have ${message.member.roles.cache.size} roles`, target: message })
-      .then(m => {
-        setTimeout(() => {
-          m.delete();
-          message.delete();
-        }, 5e3);
-      });
+      .then(m => remove(5000, m, message));
   }
   // Intro channel
   if(settings.introChannel === " ") {
@@ -201,35 +208,20 @@ client.on("messageCreate", async (message) => {
   if(client.channels.cache.get(settings.introChannel).messages.cache.filter(m => m.author.id === message.author.id).size < 1) {
     reactions.each(r => r.remove());
     return message.channel.send({ content: `\`❌\` You need an introduction posted in <#${settings.introChannel}>`, target: message })
-      .then(m => {
-        setTimeout(() => {
-          m.delete();
-          message.delete();
-        }, 5e3);
-      });
+      .then(m => remove(5000, m, message));
   }
   // VerificationPhrase
   if(settings.verificationPhrase != " " && message.content != settings.verificationPhrase) {
     reactions.each(r => r.remove());
     return message.channel.send({ content: "`❌` The password is incorrect", target: message })
-      .then(m => {
-        setTimeout(() => {
-          m.delete();
-          message.delete();
-        }, 5e3);
-      });
+      .then(m => remove(5000, m, message));
   }
 
   // Apply roles
   if((settings.addRoles[0] != " " || settings.removeRoles[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
     reactions.each(r => r.remove());
     return message.channel.send({ content: "`❌` I cannot modify roles. Please inform server staff of this issue", target: message })
-      .then(m => {
-        setTimeout(() => {
-          m.delete();
-          message.delete();
-        }, 5e3);
-      });
+      .then(m => remove(5000, m, message));
   }
   const addRoles = settings.addRoles.split(",");
   for(const role of addRoles) {
@@ -247,10 +239,32 @@ client.on("messageCreate", async (message) => {
     if(!message.member.roles.cache.has(role)) continue;
     await message.member.roles.remove(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
   }
+
+  // Welcome message
+  if(settings.welcomeChannel != " ") {
+    const welcomeMessage = await client.channels.cache.get(settings.welcomeChannel);
+    const welcomeContent = settings.welcomeMessage
+      .replace("{{user}}", `<@${message.author.id}>`)
+      .replace("{{user.tag}}", `${message.author.username}`)
+      .replace("{{user.id}}", `${message.author.id}`)
+      .replace("{{guild}}", `${message.guild.name}`)
+      .replace("{{guild.id}}", `${message.guild.id}`);
+
+    welcomeMessage.send({ content: welcomeContent });
+  }
   
-  // Remove all remaining evidence
+  // Remove all items
   reactions.each(r => r.remove());
   return message.delete();
+
+  // -- FUNCTION -- //
+  function remove(delay, ...items) {
+    setTimeout(() => {
+      for(const item of items) {
+        if(item.deletable) item.delete();
+      }
+    }, delay);
+  }
 });
 //#endregion
 

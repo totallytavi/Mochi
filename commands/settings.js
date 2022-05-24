@@ -26,17 +26,24 @@ module.exports = {
      * @param {CommandInteractionOptionResolver} options
      */
   run: async (client, interaction, options) => {
-    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null) await client.models.Setting.create({ guildId: interaction.guild.id, autoVerify: false, verificationChannel: " ", addRoles: " ", removeRoles: " ", rolesRequired: 0, introChannel: " ", verificationPhrase: " " });
+    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null) await client.models.Setting.create({ guildId: interaction.guild.id, autoVerify: false, verificationChannel: " ", addRoles: " ", removeRoles: " ", rolesRequired: 0, introChannel: " ", verificationPhrase: " ", welcomeChannel: " ", welcomeMessage: " " });
     const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
     const subcommand = options.getSubcommand();
     const filter = (m) => m.author.id === interaction.user.id;
+    const vars = [
+      ["{{user}}", "Mentions the user"],
+      ["{{user.tag}}", "User tag"],
+      ["{{user.id}}", "User ID"],
+      ["{{guild}}", "Server name"],
+      ["{{guild.id}}", "Server ID"],
+    ];
     
     // Permission checks
     if(!interaction.member.permissions.has("MANAGE_ROLES")) return interactionEmbed(3, "[ERR-UPRM]", "You must be able to manage roles to use this command", interaction, client, [true, 15]);
 
     if(subcommand === "view") {
       if(settings === null) return interaction.followUp({ content: "No settings found for your server!" });
-      await interaction.editReply({ content: "Your settings have been shown as an ephemeral message" });
+      await interaction.editReply({ content: "Your settings have been shown as a message only you can see" });
 
       interaction.followUp({ embeds: [new MessageEmbed({
         title: "Settings",
@@ -44,11 +51,13 @@ module.exports = {
         fields: [
           { name: "Auto Verify", value: settings.autoVerify === true ? "Enabled" : "Disabled", inline: true },
           { name: "Password", value: settings.verificationPhrase === " " ? "(None set)" : `||${settings.verificationPhrase}||`, inline: true },
-          { name: "Verification Channel", value: settings.verificationChannel === " " ? "No channel" : `<#${settings.verificationChannel}>`, inline: true },
-          { name: "Intro Channel", value: settings.introChannel === " " ? "No channel" : `<#${settings.introChannel}>`, inline: true },
+          { name: "Verification Channel", value: settings.verificationChannel === " " ? "(No channel)" : `<#${settings.verificationChannel}>`, inline: true },
+          { name: "Welcome Channel", value: settings.welcomeChannel === " " ? "(No channel)" : `<#${settings.welcomeChannel}>`, inline: true },
+          { name: "Welcome Message", value: settings.welcomeMessage === " " ? "(None set)" : settings.welcomeMessage, inline: true },
+          { name: "Intro Channel", value: settings.introChannel === " " ? "(No channel)" : `<#${settings.introChannel}>`, inline: true },
           { name: "Roles Required", value: String(settings.rolesRequired), inline: true },
-          { name: "Add Roles", value: settings.addRoles.split(",")[0] != " " ? settings.addRoles.split(",").map(i => `<@&${i}>`).join(", ") : "None set", inline: true },
-          { name: "Remove Roles", value: settings.removeRoles.split(",")[0] != " " ? settings.removeRoles.split(",").map(i => `<@&${i}>`).join(", ") : "None set", inline: true },
+          { name: "Add Roles", value: settings.addRoles.split(",")[0] != " " ? settings.addRoles.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
+          { name: "Remove Roles", value: settings.removeRoles.split(",")[0] != " " ? settings.removeRoles.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
         ]
       })], ephemeral: true });
 
@@ -61,6 +70,8 @@ module.exports = {
         new SelectMenuOptionData({ value: "autoVerify", label: "Automatic verification", description: "Applys roles when a user says a password in a channel", emoji: "🛂" }).toJSON(),
         new SelectMenuOptionData({ value: "verificationPassword", label: "Verification password", description: "Phrase required to trigger automatic verification", emoji: "🔐" }).toJSON(),
         new SelectMenuOptionData({ value: "verificationChannel", label: "Verification channel", description: "Channel for users to enter the password in", emoji: "🛡️" }).toJSON(),
+        new SelectMenuOptionData({ value: "welcomeMessage", label: "Welcome message", description: "Message to send to new users", emoji: "📬" }).toJSON(),
+        new SelectMenuOptionData({ value: "welcomeChannel", label: "Welcome channel", description: "Channel to send the welcome message in", emoji: "📪" }).toJSON(),
         new SelectMenuOptionData({ value: "introChannel", label: "Intro channel", description: "Channel for users to place their introduction in", emoji: "👋" }).toJSON(),
         new SelectMenuOptionData({ value: "rolesRequired", label: "Roles required", description: "Number of roles required to trigger automatic verification", emoji: "🔢" }).toJSON(),
         new SelectMenuOptionData({ value: "addRoles", label: "Add roles", description: "Roles to add when a user says a password in a channel", emoji: "📤" }).toJSON(),
@@ -155,6 +166,29 @@ module.exports = {
         const cleanChannel = channel.first().mentions.channels.first().toString().replace(/[<#>]/g, "");
         await client.models.Setting.update({ verificationChannel: cleanChannel }, { where: { guildId: interaction.guild.id } });
         interactionEmbed(1, "", `Successfully set the verification channel to: <#${cleanChannel}>`, interaction, client, [true, 20]);
+      } else if(option.values[0] === "welcomeMessage") {
+        await interaction.editReply({ content: `Please say the welcome message. Variables are listed below\n\n>>> ${vars.map(v => `${v[0]}: ${v[1]}`).join("\n")}` });
+        const message = await interaction.channel
+          .awaitMessages({ filter, max: 1, time: 30000, errors: ["time"] })
+          .catch(() => { return undefined; });
+
+        if(!message) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid message", interaction, client, [true, 10]);
+        message.first().delete();
+        const cleanMessage = message.first().content;
+        await client.models.Setting.update({ welcomeMessage: cleanMessage }, { where: { guildId: interaction.guild.id } });
+        interactionEmbed(1, "", `Successfully set the welcome message to: ${cleanMessage}`, interaction, client, [true, 20]);
+      } else if(option.values[0] === "welcomeChannel") {
+        await interaction.editReply({ content: "Please mention the channel to place the welcome message in" });
+        const channel = await interaction.channel
+          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
+          .catch(() => { return undefined; });
+
+        if(!channel) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
+        if(channel.first().mentions.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
+        channel.first().delete();
+        const cleanChannel = channel.first().mentions.channels.first().toString().replace(/[<#>]/g, "");
+        await client.models.Setting.update({ welcomeChannel: cleanChannel }, { where: { guildId: interaction.guild.id } });
+        interactionEmbed(1, "", `Successfully set the welcome channel to: <#${cleanChannel}>`, interaction, client, [true, 20]);
       }
     }
   }

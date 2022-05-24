@@ -32,5 +32,13 @@ module.exports.import = (sequelize) => sequelize.define("Setting", {
   verificationPhrase: {
     type: DataTypes.TEXT,
     allowNull: false
+  },
+  welcomeMessage: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  welcomeChannel: {
+    type: DataTypes.TEXT,
+    allowNull: false
   }
 });

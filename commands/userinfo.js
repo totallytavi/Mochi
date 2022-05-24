@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
 const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
 const { interactionEmbed } = require("../functions.js");
-// Moment isn't technically needed. It's required because Date constructors convert dates to your local timezone.
 const moment = require("moment");
 const config = require("../config.json");
 
