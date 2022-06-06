@@ -184,43 +184,50 @@ client.on("messageCreate", async (message) => {
   // Permissions checks
   if(!message.guild.me.permissionsIn(message.channel).has(11328)) {
     reactions.each(r => r.remove());
-    return message.channel.send(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
+    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
       .then(m => remove(7500, m, message));
   }
   if(settings.welcomeChannel != " " && !message.guild.me.permissionsIn(settings.welcomeChannel).has(51200)) {
     reactions.each(r => r.remove());
-    return message.channel.send(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(settings.welcomeChannel).missing(51200).join("\n")}\`\`\``)
+    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> ${message.guild.me.permissionsIn(settings.welcomeChannel).missing(51200).join("\n")}`)
       .then(m => remove(7500, m, message));
   }
 
   // Roles required
   if(settings.rolesRequired != " " && message.member.roles.cache.size < settings.rolesRequired) {
     reactions.each(r => r.remove());
-    return message.channel.send({ content: `\`❌\` You need ${settings.rolesRequired} roles to verify, you currently have ${message.member.roles.cache.size} roles`, target: message })
+    return message.reply({ content: `\`❌\` You need ${settings.rolesRequired} roles to verify, you currently have ${message.member.roles.cache.size} roles` })
       .then(m => remove(5000, m, message));
   }
   // Intro channel
   if(settings.introChannel === " ") {
     reactions.each(r => r.remove());
-    return message.delete();
-  }
-  await client.channels.cache.get(settings.introChannel).messages.fetch();
-  if(client.channels.cache.get(settings.introChannel).messages.cache.filter(m => m.author.id === message.author.id).size < 1) {
-    reactions.each(r => r.remove());
-    return message.channel.send({ content: `\`❌\` You need an introduction posted in <#${settings.introChannel}>`, target: message })
+    return message.reply({ content: "`❌` The bot is not configured to have an intro channel" })
       .then(m => remove(5000, m, message));
+  }
+  const splitIntro = settings.introChannel.split(",");
+  let intro = false;
+  for(let i = 0; intro === false; i++) {
+    if(i > splitIntro.length - 1) {
+      reactions.each(r => r.remove());
+      return message.reply({ content: `\`❌\` You need an introduction posted one of the following channels: <#${splitIntro.join(">, <#")}>` })
+        .then(m => remove(5000, m, message));
+    }
+    console.info(i);
+    await client.channels.cache.get(splitIntro[i]).messages.fetch();
+    if(client.channels.cache.get(splitIntro[i]).messages.cache.some(m => m.author.id === message.author.id)) intro = true;
   }
   // VerificationPhrase
   if(settings.verificationPhrase != " " && message.content != settings.verificationPhrase) {
     reactions.each(r => r.remove());
-    return message.channel.send({ content: "`❌` The password is incorrect", target: message })
+    return message.reply({ content: "`❌` The password is incorrect" })
       .then(m => remove(5000, m, message));
   }
 
   // Apply roles
   if((settings.addRoles[0] != " " || settings.removeRoles[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
     reactions.each(r => r.remove());
-    return message.channel.send({ content: "`❌` I cannot modify roles. Please inform server staff of this issue", target: message })
+    return message.reply({ content: "`❌` I cannot modify roles. Please inform server staff of this issue" })
       .then(m => remove(5000, m, message));
   }
   const addRoles = settings.addRoles.split(",");

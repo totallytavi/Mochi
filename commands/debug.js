@@ -25,12 +25,13 @@ module.exports = {
       fields: [
         { name: "Guild ID", value: interaction.guild.id, inline: true },
         { name: "Guild Name", value: interaction.guild.name, inline: true },
-        { name: "Guild Owner", value: interaction.guild.owner.user.tag, inline: true },
-        { name: "Executor Permissions", value: interaction.memberPermissions.bitfield, inline: true },
-        { name: "Settings in Database?", value: settings.introChannel === " " ? "No" : "Yes", inline: true }
+        { name: "Guild Owner", value: interaction.guild.ownerId, inline: true },
+        { name: "Executor Permissions", value: interaction.memberPermissions.bitfield.toString(), inline: true },
+        { name: "Settings in Database?", value: settings.introChannel === " " ? "No" : "Yes", inline: true },
+        { name: "Auto Verification?", value: settings.autoVerify ? "Yes" : "No", inline: true },
       ]
     })] });
 
-    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${interaction.guild.owner.user.tag}\n> Executor Permissions: ${interaction.memberPermissions.bitfield}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
+    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
   }
 };
