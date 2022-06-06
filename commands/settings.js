@@ -130,17 +130,17 @@ module.exports = {
         await client.models.Setting.update({ removeRoles: cleanRoles.join(",") }, { where: { guildId: interaction.guild.id } });
         interactionEmbed(1, "", `Successfully set the roles to remove from members when they say the password to: ${cleanRoles.map(i => `<@&${i}>`).join(", ")}`, interaction, client, [true, 20]);
       } else if(option.values[0] === "introChannel") {
-        await interaction.editReply({ content: "Please mention the channel to place the introduction in" });
-        const channel = await interaction.channel
+        await interaction.editReply({ content: "Please mention the channels (Separated by commas) to use as introduction channels" });
+        const channels = await interaction.channel
           .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
           .catch(() => { return undefined; });
         
-        if(!channel) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        if(channel.first().mentions.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        channel.first().delete();
-        const cleanChannel = channel.first().mentions.channels.first().toString().replace(/[<#>]/g, "");
-        await client.models.Setting.update({ introChannel: cleanChannel }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the introduction channel to: <#${cleanChannel}>`, interaction, client, [true, 20]);
+        if(!channels) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid channel(s)", interaction, client, [true, 10]);
+        if(channels.first().mentions.channels.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid channel(s)", interaction, client, [true, 10]);
+        const cleanChannels = channels.first().mentions.roles.map((_k, v) => v.replace(/[<#>]/g, ""));
+        channels.first().delete();
+        await client.models.Setting.update({ addRoles: cleanChannels.join(",") }, { where: { guildId: interaction.guild.id } });
+        interactionEmbed(1, "", `Successfully set the roles to add to members when they say the password to: ${cleanChannels.map(i => `<@&${i}>`).join(", ")}`, interaction, client, [true, 20]);
       } else if(option.values[0] === "rolesRequired") {
         await interaction.editReply({ content: "Please say how many roles are needed to pass verification (1, etc.)" });
         const num = await interaction.channel

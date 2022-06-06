@@ -1,0 +1,36 @@
+const { SlashCommandBuilder } = require("@discordjs/builders");
+// eslint-disable-next-line no-unused-vars
+const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
+const { toConsole } = require("../functions");
+
+module.exports = {
+  name: "debug",
+  ephemeral: false,
+  data: new SlashCommandBuilder()
+    .setName("debug")
+    .setDescription("Shows information about the bot for support purposes"),
+  /**
+   * @param {Client} client
+   * @param {CommandInteraction} interaction
+   * @param {CommandInteractionOptionResolver} options
+   */
+  // eslint-disable-next-line no-unused-vars
+  run: async (client, interaction, _options) => {
+    // Get the server settings
+    const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
+
+    interaction.editReply({ content: "Information has been provided below! Please forward this to support if they do not see it", embeds: [new MessageEmbed({
+      title: "Debugging Information",
+      description: "This information is provided for support purposes only and should not be shared with anyone else apart from support",
+      fields: [
+        { name: "Guild ID", value: interaction.guild.id, inline: true },
+        { name: "Guild Name", value: interaction.guild.name, inline: true },
+        { name: "Guild Owner", value: interaction.guild.owner.user.tag, inline: true },
+        { name: "Executor Permissions", value: interaction.memberPermissions.bitfield, inline: true },
+        { name: "Settings in Database?", value: settings.introChannel === " " ? "No" : "Yes", inline: true }
+      ]
+    })] });
+
+    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${interaction.guild.owner.user.tag}\n> Executor Permissions: ${interaction.memberPermissions.bitfield}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
+  }
+};
