@@ -3,7 +3,7 @@
     "@discordjs/builders": "^0.13.0",
     "@discordjs/rest": "^0.4.1",
     "ascii-table": "^0.0.9",
-    "discord-api-types": "^0.33.4",
+    "discord-api-types": "^0.33.5",
     "discord.js": "^13.8.0",
     "fs": "^0.0.2",
     "moment": "^2.29.3",
