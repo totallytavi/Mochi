@@ -8,13 +8,13 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("ship")
     .setDescription("Ship yourself, yourself and a random user, or two users")
-    .addUserOption(option => {
+    .addStringOption(option => {
       return option
         .setName("user")
         .setDescription("The user to ship with")
         .setRequired(false);
     })
-    .addUserOption(option => {
+    .addStringOption(option => {
       return option
         .setName("user2")
         .setDescription("The user to ship with")
@@ -27,24 +27,34 @@ module.exports = {
    */
   run: async (_client, interaction, options) => {
     // User handling
-    const member = options.getMember("user");
-    const member2 = options.getMember("user2");
+    const member = options.getString("user");
+    const member2 = options.getString("user2");
     let user1, user2, emoji;
     const cache = await interaction.guild.members.fetch().then(m => { return m.filter(m => !m.user.bot && m.user.id != interaction.user.id); });
-    if(!member && !member2) {
-      user1 = `<@${interaction.user.id}>`;
-      user2 = `<@${cache.random().id}>`;
-    } else if(member && !member2) {
-      user1 = `<@${cache.random().id}>`;
-      user2 = `<@${member.user.id}>`;
-    } else if(!member && member2) {
-      user1 = `<@${cache.random().id}>`;
-      user2 = `<@${member2.user.id}>`;
-    } else if(member && member2) {
-      user1 = `<@${member.user.id}>`;
-      user2 = `<@${member2.user.id}>`;
+    const regex = /<@![0-9]+>/g;
+    // If both are empty
+    if(isNull(member) && isNull(member2)) {
+      user1 = interaction.user.toString();
+      user2 = cache.random().toString();
+      // If member is a string or mention
+    } else if(regex.test(member) && !isNull(member)) {
+      user1 = member.match(regex)[0];
+      user2 = cache.random().toString();
+      // If member2 is a string or mention
+    } else if(regex.test(member2) && !isNull(member2)) {
+      user1 = cache.random().toString();
+      user2 = member2.match(regex)[0];
+      // If member is a string
+    } else if(!isNull(member) && isNull(member2)) {
+      user1 = member;
+      user2 = cache.random().toString();
+      // If member2 is a string
+    } else if(isNull(member) && !isNull(member2)) {
+      user1 = cache.random().toString();
+      user2 = member2;
     }
 
+    // Emoji handling
     const min = 0;
     const max = 100;
     const match = Math.floor(Math.random()*(max-min+1)+min);
@@ -72,7 +82,7 @@ module.exports = {
       emoji = "🤍🤍💜💜💙💚💛🧡❤️❤️";
     }
     
-    interaction.editReply({ content: "​", embeds: [new MessageEmbed({
+    interaction.editReply({ embeds: [new MessageEmbed({
       color: Math.floor(Math.random()*16777215),
       description: `**${user1} x ${user2}**
       
@@ -80,3 +90,7 @@ module.exports = {
     })] });
   }
 };
+
+function isNull(obj) {
+  return obj === null;
+}

@@ -39,17 +39,15 @@ module.exports = {
     let error = false;
 
     //#region Validation
-    // Check if the user exists
-    if(!user) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
     // Check executions
-    if(user === interaction.member) return interactionEmbed(3, "[ERR-ARGS]", "You cannot ban yourself", interaction, client, [true, 10]);
+    if(user != null && user === interaction.member) return interactionEmbed(3, "[ERR-ARGS]", "You cannot ban yourself", interaction, client, [true, 10]);
     if(user.user.bot) return interactionEmbed(3, "[ERR-ARGS]", "Bots cannot be banned", interaction, client, [true, 10]);
     // Executor permissions
-    if(!interaction.member.permissions.has("MANAGE_ROLES") && !interaction.member.roles.has(config.discord.devRole)) return interactionEmbed(3, "[ERR-UPRM]", "You do not have permission to warn members", interaction, client, [true, 10]);
-    if(interaction.member.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-UPRM]", "You cannot ban someone equal to or higher than you on the role hierarchy", interaction, client, [true, 10]);
+    if(!interaction.member.permissions.has("BAN_MEMBERS") && !interaction.member.roles.has(config.discord.devRole)) return interactionEmbed(3, "[ERR-UPRM]", "You do not have permission to ban members", interaction, client, [true, 10]);
+    if(user != null &&  interaction.member.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-UPRM]", "You cannot ban someone equal to or higher than you on the role hierarchy", interaction, client, [true, 10]);
     // Bot permissions
     if(!interaction.guild.me.permissions.has("BAN_MEMBERS")) return interactionEmbed(3, "[ERR-BPRM]", "I do not have permission to ban members", interaction, client, [true, 10]);
-    if(interaction.guild.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot ban someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
+    if(user != null &&  interaction.guild.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot ban someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
     // Duration
     if(options.getString("length")) {
       var duration = parseTime(options.getString("length"));
@@ -57,6 +55,31 @@ module.exports = {
       if(duration < 0) return interactionEmbed(3, "[ERR-ARGS]", "Duration cannot be negative", interaction, client, [true, 10]);
     }
     //#endregion
+    if(!user) {
+      interaction.guild.bans.create(options.getUser("user"), { reason: reason });
+      try {
+        await client.models.Punishment.create({
+          userId: user.id,
+          modId: interaction.user.id,
+          guildId: interaction.guild.id,
+          type: "BAN",
+          endsAt: new Date(Date.now() + duration), 
+          active: true,
+          deleted: false,
+          reason: reason
+        });
+      } catch(e) {
+        error = true;
+        if(!e.errors) {
+          interactionEmbed(3, "[ERR-SQL]", "An unknown error occured while adding the ban to the database", interaction, client, [true, 10]);
+        } else {
+          interactionEmbed(3, "[ERR-SQL]", `> ${e.errors.map(e => `\`${e.type}\` @ \`${e.path}\``).join("\n> ")}`, interaction, client, [true, 15]);
+        }
+      }
+      if(error) return;
+
+      return interactionEmbed(1, `Banned ${user} for: ${reason}`, interaction, client, [false, 0]);
+    }
 
     // Ban the user
     await interaction.editReply({ content: "Adding the ban to the database" });
