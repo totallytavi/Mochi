@@ -39,6 +39,7 @@ module.exports = {
       await client.models.Collar.create({
         collared: discMember.user.id,
         owner: interaction.user.id,
+        guild: interaction.guild.id,
         collaredAt: new Date()
       });
     } catch(e) {
@@ -52,6 +53,6 @@ module.exports = {
 
     if(error) return;
 
-    interactionEmbed(1, "Successfully collared the user", "", interaction, client, [false, 0]);
+    interactionEmbed(1, "", "Successfully collared the user", interaction, client, [false, 0]);
   }
 };

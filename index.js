@@ -213,7 +213,6 @@ client.on("messageCreate", async (message) => {
       return message.reply({ content: `\`❌\` You need an introduction posted one of the following channels: <#${splitIntro.join(">, <#")}>` })
         .then(m => remove(5000, m, message));
     }
-    console.info(i);
     await client.channels.cache.get(splitIntro[i]).messages.fetch();
     if(client.channels.cache.get(splitIntro[i]).messages.cache.some(m => m.author.id === message.author.id)) intro = true;
   }

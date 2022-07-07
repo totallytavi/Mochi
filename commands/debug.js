@@ -29,9 +29,12 @@ module.exports = {
         { name: "Executor Permissions", value: interaction.memberPermissions.bitfield.toString(), inline: true },
         { name: "Settings in Database?", value: settings.introChannel === " " ? "No" : "Yes", inline: true },
         { name: "Auto Verification?", value: settings.autoVerify ? "Yes" : "No", inline: true },
-      ]
-    })] });
+      ],
+      footer: {
+        text: `${interaction.guild.memberCount} members :=: ${interaction.guild.members.cache.size} cached`
+      }
+    }) ]});
 
-    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
+    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Guild Member Count: ${interaction.guild.memberCount} (Cache: ${interaction.guild.members.cache.size})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
   }
 };

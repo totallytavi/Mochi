@@ -10,6 +10,10 @@ module.exports.import = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    guild: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     collaredAt: {
       type: DataTypes.DATE,
       allowNull: true,

@@ -38,15 +38,22 @@ module.exports = {
     });
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
     const collar = await client.models.Collar.findOne({ where: { collared: member.user.id } });
+    let owned = await client.models.Collar.findAll({ where: { owner: member.user.id } });
+    if(owned.length > 0) {
+      owned = owned.map(c => `<@${c.collared}>`).join(", ");
+    } else {
+      owned = "No pets!";
+    }
     embed.setTitle(`Information on ${member.user.tag}`);
-    embed.setDescription(collar === null ? "This user is uncollared!" : `<:PinkCollar:968663386881687572> Owned by <@${collar.owner}>`);
+    embed.setDescription(collar === null ? "This user is uncollared!" : `<:PinkCollar:968663386881687572> Owned by <@${collar.owner}> since <t:${Math.floor(new Date(collar.collaredAt).getTime()/1000.0)}>`);
     embed.setFooter({ text: `ID: ${member.user.id}` });
     embed.setThumbnail(member.user.displayAvatarURL({ format: "png", size: 2048, dynamic: true }));
     embed.addFields([
       { name: "Register Date", value: String(moment(member.user.createdAt)._i), inline: true },
       { name: "Join Date", value: String(moment(member.joinedAt)._i), inline: true },
       { name: "Nickname", value: `${member.nickname || "None"}`, inline: true },
-      { name: "Roles", value: `${roles.length < 1024 ? roles : "Too many roles!"}`, inline: false },
+      { name: "Roles", value: `${roles.length <= 1024 ? roles : "Too many roles!"}`, inline: false },
+      { name: "Owns", value: owned, inline: true },
     ]);
 
     interaction.editReply({ embeds: [embed] });
