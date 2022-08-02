@@ -96,6 +96,14 @@ In this command, you may notice that the command asks you for an option and valu
 ```
 - A role ID (123456789012345678) or mention (@example)
 ```
+**Replacements**
+```
+- {{user}} - Mentions the user
+- {{user.tag}} - Username
+- {{user.id}} - User ID
+- {{guild}} - Server name
+- {{guild.id}} - Server ID
+```
 
 ## License ##
 Coder-Tavi/Mochi is licensed under the GNU General Public License v3.0. You can find more details about the license and where to find it in the file titled "LICENSE" in the primary directory.
