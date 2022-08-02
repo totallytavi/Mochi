@@ -63,6 +63,8 @@ To validate your code against the ESLint configuration, please use the following
 Since this bot operates on Discord's slash commands, all commands can be viewed by typing `/` into the Discord chat bar. You will see a list of commands appear for the different bots. Scroll until you see the bot's. All available commands will be listed there.
 ### Settings ###
 In this command, you may notice that the command asks you for an option and value. This is due to the fact that creating a subcommand for each option is a little ineffective and wouldn't work out great for the bot and you. Therefore, I have used options instead. Here's what each option does and what the value should be.
+
+
 **Automatic Verification**
 ```
 - 1/0
@@ -98,11 +100,16 @@ In this command, you may notice that the command asks you for an option and valu
 ```
 **Replacements**
 ```
-- {{user}} - Mentions the user
-- {{user.tag}} - Username
-- {{user.id}} - User ID
-- {{guild}} - Server name
-- {{guild.id}} - Server ID
+{{user}} - Mentions the user
+{{user.tag}} - Username
+{{user.id}} - User ID
+{{guild}} - Server name
+{{guild.id}} - Server ID
+{{guild.count}} - Server member count
+{{guild.owner}} - Mentions the server owner
+{{guild.ownerNick}} - Server owner nickname
+{{guild.ownerUser}} - Server owner username
+{{guild.ownerID}} - Server owner ID
 ```
 
 ## License ##

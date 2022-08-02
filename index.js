@@ -251,11 +251,16 @@ client.on("messageCreate", async (message) => {
   if(settings.welcomeChannel != " ") {
     const welcomeMessage = await client.channels.cache.get(settings.welcomeChannel);
     const welcomeContent = settings.welcomeMessage
-      .replace("{{user}}", `<@${message.author.id}>`)
-      .replace("{{user.tag}}", `${message.author.username}`)
-      .replace("{{user.id}}", `${message.author.id}`)
-      .replace("{{guild}}", `${message.guild.name}`)
-      .replace("{{guild.id}}", `${message.guild.id}`);
+      .replaceAll("{{user}}", `<@${message.author.id}>`)
+      .replaceAll("{{user.tag}}", `${message.author.username}`)
+      .replaceAll("{{user.id}}", `${message.author.id}`)
+      .replaceAll("{{guild}}", `${message.guild.name}`)
+      .replaceAll("{{guild.id}}", `${message.guild.id}`)
+      .replaceAll("{{guild.count}}", `${message.guild.memberCount}`)
+      .replaceAll("{{guild.owner}}", `${(await message.guild.fetchOwner()).toString()}`)
+      .replaceAll("{{guild.ownerNick", `${(await message.guild.fetchOwner()).nickname}`)
+      .replaceAll("{{guild.ownerUser}}", `${(await message.guild.fetchOwner()).user.tag}`)
+      .replaceAll("{{guild.ownerID}}", `${(await message.guild.fetchOwner()).id}`);
 
     welcomeMessage.send({ content: welcomeContent });
   }
