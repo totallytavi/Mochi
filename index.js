@@ -8,6 +8,7 @@ const rest = new REST({ version: 10 }).setToken(config.bot.token);
 const fs = require("fs");
 const wait = require("util").promisify(setTimeout);
 let ready = false;
+let cache = [0, {}];
 
 //#region Setup
 // Database
@@ -164,7 +165,14 @@ client.on("messageCreate", async (message) => {
   if(!ready) return;
   if(!message.guild) return;
   
-  const settings = await client.models.Setting.findOne({ where: { guildId: message.guild.id } });
+  let settings;
+  // Cache the settings for 30 seconds
+  if(cache[0] + 30 < Math.floor(Date.now()/1000)) {
+    settings = await client.models.Setting.findOne({ where: { guildId: message.guild.id } });
+    cache = [Math.floor(Date.now()), settings];
+  } else {
+    settings = cache[1];
+  }
   if(settings === null) return;
   if(message.author.bot) return;
   if(!settings.autoVerify) return;
