@@ -1,7 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, SelectMenuInteraction } = require("discord.js");
-// eslint-disable-next-line no-unused-vars
-const { SelectMenuOptionData } = require("./classes/SelectMenuOptionData");
+const { Client, EmbedBuilder, Interaction, ActionRow, ButtonBuilder } = require("discord.js");
 const config = require("./config.json");
 
 const errors = {
@@ -21,55 +19,58 @@ module.exports = {
   /**
    * @description Sends a message to the console
    * @param {String} message [REQUIRED] The message to send to the console
-   * @param {String} source [REQUIRED] Source of the message
+   * @param {String} source [REQUIRED] Source of the message (Error.stack)
    * @param {Client} client [REQUIRED] A logged-in Client to send the message
    * @returns {null} null
-   * @example toConsole(`Hello, World!`, `functions.js 12:15`, client);
-   * @example toConsole(`Published a ban`, `ban.js 14:35`, client);
+   * @example toConsole(`Hello, World!`, new Error().stack, client);
+   * @example toConsole(`Published a ban`, new Error().stack, client);
    */
   toConsole: async (message, source, client) => {
     if(!message || !source || !client) return console.error(`One or more of the required parameters are missing.\n\n> message: ${message}\n> source: ${source}\n> client: ${client}`);
     const channel = await client.channels.cache.get(config.discord.devChannel);
-    if(!channel) return console.warn("[WARN] toConsole called but bot cannot find config.discord.devChannel", message, source);
+    if(source.split("\n").length < 2) return console.error("[ERR] toConsole called but Error.stack was not used\n> Source: " + source);
+    source = source.split("\n")[1].trim().substring(3).split("/").pop().replace(")", "");
+    if(!channel) return console.warn("[WARN] toConsole called but bot cannot find config.discord.devChannel\n", message, "\n", source);
 
-    channel.send(`Incoming message from ${source} at <t:${Math.floor(Date.now()/1000)}:F>`);
-    channel.send({ embeds: [
-      new MessageEmbed({
-        title: "Message to Console",
-        color: "RED",
-        description: `${message}`,
-        footer: {
-          text: `Source: ${source} @ ${new Date().toLocaleTimeString()} ${new Date().toString().match(/GMT([+-]\d{2})(\d{2})/)[0]}`
-        },
-        timestamp: new Date()
-      })
-    ]});
+    await channel.send(`Incoming message from \`${source}\` at <t:${Math.floor(Date.now()/1000)}:F>`);
+    const check = await channel.send({ embeds: [{
+      title: "Message to Console",
+      color: 0xDE2821,
+      description: `${message}`,
+      footer: {
+        text: `Source: ${source} @ ${new Date().toLocaleTimeString()} ${new Date().toString().match(/GMT([+-]\d{2})(\d{2})/)[0]}`
+      },
+      timestamp: new Date()
+    }] })
+      .then(false)
+      .catch(true); // Supress errors
+    if(check) return console.error("[ERR] toConsole called but message failed to send");
 
     return null;
   },
   /**
-   * @description Replies with a MessageEmbed to the Interaction
+   * @description Replies with a Embed to the Interaction
    * @param {Number} type 1- Sucessful, 2- Warning, 3- Error, 4- Information
    * @param {String} content The information to state
    * @param {String} expected The expected argument (If applicable)
    * @param {Interaction} interaction The Interaction object for responding
    * @param {Client} client Client object for logging
    * @param {Array<Boolean, Number>} remove Whether to delete the message and the specified timeout in seconds
-   * @example interactionEmbed(1, `Removed ${removed} roles`, ``, interaction, client, [false, 0])
+   * @example interactionEmbed(1, "", `Removed ${removed} roles`, interaction, client, [false, 0])
    * @example interactionEmbed(3, `[ERR-UPRM]`, `Missing: \`Manage Messages\``, interaction, client, [true, 15])
    * @returns {null} 
    */
   interactionEmbed: async function(type, content, expected, interaction, client, remove) {
     if(!type || typeof content != "string" || expected === undefined || !interaction || !client || !remove || remove.length != 2) throw new SyntaxError(`One or more of the required parameters are missing in [interactionEmbed]\n\n> ${type}\n> ${content}\n> ${expected}\n> ${interaction}\n> ${client}`);
     if(!interaction.deferred) await interaction.deferReply();
-    const embed = new MessageEmbed();
+    const embed = new EmbedBuilder();
 
     switch(type) {
     case 1:
       embed
         .setTitle("Success")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
-        .setColor("BLURPLE")
+        .setColor(0x7289DA)
         .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with no errors" })
         .setTimestamp();
@@ -79,7 +80,7 @@ module.exports = {
       embed
         .setTitle("Warning")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
-        .setColor("ORANGE")
+        .setColor(0xFFA500)
         .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with a minor error" })
         .setTimestamp();
@@ -89,7 +90,7 @@ module.exports = {
       embed
         .setTitle("Error")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
-        .setColor("RED")
+        .setColor(0xFF0000)
         .setDescription(!errors[content] ? `I don't understand the error "${content}" but was expecting ${expected}. Please report this to the support server!` : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation failed to complete due to an error" })
         .setTimestamp();
@@ -99,7 +100,7 @@ module.exports = {
       embed
         .setTitle("Information")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
-        .setColor("BLURPLE")
+        .setColor(0x7289DA)
         .setDescription(!errors[content] ? expected : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation is pending completion" })
         .setTimestamp();
@@ -114,11 +115,11 @@ module.exports = {
      * Sends buttons to a user and awaits the response
      * @param {Interaction} interaction Interaction object
      * @param {Number} time Seconds for which the buttons are valid
-     * @param {Array<MessageButton>} buttons The buttons to place on the message
+     * @param {Array<ButtonBuilder>} buttons The buttons to place on the message
      * @param {String|null} content The content to display, can be blank
      * @param {Boolean} remove Delete the message after the time expires
      * @example awaitButtons(interaction, 15, [button1, button2], `Select a button`, true);
-     * @returns {MessageButton|null} The button the user clicked or null if no button was clicked
+     * @returns {ButtonBuilder|null} The button the user clicked or null if no button was clicked
      */
   awaitButtons: async function (interaction, time, buttons, content, remove) {
     if(!interaction || !time || !buttons || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> buttons: ${buttons}\n> remove: ${remove}`);
@@ -130,8 +131,8 @@ module.exports = {
     };
     // Convert the time to milliseconds
     time *= 1000;
-    // Create a MessageActionRow and add the buttons
-    const row = new MessageActionRow();
+    // Create a ActionRow and add the buttons
+    const row = new ActionRow();
     row.addComponents(buttons);
     // Send a follow-up message with the buttons and await a response
     const message = await interaction.followUp({ content: content, components: [row] });
@@ -142,56 +143,6 @@ module.exports = {
     for(const button of row.components) {
       button.setDisabled(true);
     }
-    // Step 5: Cleanup
-    setTimeout(() => {
-      if(message != undefined && !message.deleted && remove && res != null) message.delete();
-    }, 1500);
-    await message.edit({ content: content, components: [] });
-    return res;
-  },
-  /**
-   * Send a MessageSelectMenu to a user and awaits the response
-   * @param {Interaction} interaction Interaction object
-   * @param {Number} time Seconds for which the menu is valid
-   * @param {Number[]} values [min, max] The amount of values that can be selected
-   * @param {SelectMenuOptionData|SelectMenuOptionData[]} options The options for the menu
-   * @param {String|null} content The content to display, can be blank
-   * @param {Boolean} remove Delete the message after the time expires
-   * @example awaitMenu(interaction, 15, [menu], `Select an option`, true);
-   * @returns {SelectMenuInteraction|null} The menu the user interacted with or null if nothing was selected
-   */
-  awaitMenu: async function (interaction, time, values, options, content, remove) {
-    // Step 0: Checks
-    if(!interaction || !time || !values || !options || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> values: ${values}\n> options: ${options}\n> remove: ${remove}`);
-    content = content ?? "Please select an option";
-
-    // Step 1: Setup
-    const filter = i => {
-      return i.user.id === interaction.user.id;
-    };
-    time *= 1000;
-
-    // Step 2: Creation
-    const row = new MessageActionRow();
-    const menu = new MessageSelectMenu({
-      minValues: values[0],
-      maxValues: values[1],
-      customId: "await-menu"
-    });
-    menu.addOptions(options);
-    row.addComponents(menu);
-
-    // Step 3: Execution
-    const message = await interaction.followUp({ content: content, components: [row] });
-    const res = await message
-      .awaitMessageComponent({ filter, componentType: "SELECT_MENU", time: time, errors: ["time"] })
-      .catch(() => { return null; });
-
-    // Step 4: Processing
-    row.components[0].setDisabled(true);
-    // eslint-disable-next-line no-useless-escape
-    await message.edit({ content: res === null ? "\:lock: Cancelled" : content, components: [row] });
-
     // Step 5: Cleanup
     setTimeout(() => {
       if(message != undefined && !message.deleted && remove && res != null) message.delete();

@@ -1,6 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageButton } = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder } = require("discord.js");
 const { interactionEmbed, awaitButtons } = require("../functions.js");
 
 module.exports = {
@@ -33,7 +32,7 @@ module.exports = {
     if(check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar users that yourself or those you've collared", interaction, client, [true, 10]);
 
     // Confirmation
-    const confirmation = await awaitButtons(interaction, 15, [new MessageButton({ customId: "yes", label: "Yes", style: "DANGER" }), new MessageButton({ customId: "no", label: "No", style: "PRIMARY" })], `Are you sure you want to uncollar ${check.owner === interaction.user.id ? "your pet" : "yourself"}?`, false);
+    const confirmation = await awaitButtons(interaction, 15, [new ButtonBuilder({ customId: "yes", label: "Yes", style: "DANGER" }), new ButtonBuilder({ customId: "no", label: "No", style: "PRIMARY" })], `Are you sure you want to uncollar ${check.owner === interaction.user.id ? "your pet" : "yourself"}?`, false);
     await confirmation.deleteReply();
     if(confirmation === null || confirmation.customId === "no") {
       return interactionEmbed(4, "", "Cancelled the command", interaction, client, [true, 10]);

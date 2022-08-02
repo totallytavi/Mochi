@@ -1,6 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
   name: "ship",
@@ -82,7 +81,7 @@ module.exports = {
       emoji = "🤍🤍💜💜💙💚💛🧡❤️❤️";
     }
     
-    interaction.editReply({ embeds: [new MessageEmbed({
+    interaction.editReply({ embeds: [new Embed({
       color: Math.floor(Math.random()*16777215),
       description: `**${user1} x ${user2}**
       

@@ -1,6 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } = require("discord.js");
 const { interactionEmbed } = require("../functions.js");
 const moment = require("moment");
 const config = require("../config.json");
@@ -33,7 +32,7 @@ module.exports = {
     const member = options.getMember("user");
     if(!member) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
 
-    const embed = new MessageEmbed({
+    const embed = new Embed({
       color: Math.floor(Math.random() * 16777215)
     });
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
@@ -62,7 +61,7 @@ module.exports = {
     if(options.getBoolean("mod_history")) {
       let punishments = await client.models.Punishment.findAll({ where: { guildId: interaction.guild.id, userId: member.user.id, deleted: false } });
       if(member.roles.cache.has(config.discord.devRole)) punishments = await client.models.Punishment.findAll({ where: { userId: member.user.id } });
-      const embed2 = new MessageEmbed();
+      const embed2 = new Embed();
       if(punishments.length > 0) {
         embed2.setTitle(`Information on ${member.user.tag} (${member.user.id})`);
         embed2.setColor(punishments.length < 5 ? 0xFFA500 : 0xFF0000);

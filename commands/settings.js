@@ -1,8 +1,6 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed, MessageButton } = require("discord.js");
-const { SelectMenuOptionData } = require("../classes/SelectMenuOptionData.js");
-const { awaitButtons, awaitMenu, interactionEmbed } = require("../functions.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder} = require("discord.js");
+const { interactionEmbed, toConsole } = require("../functions.js");
 
 module.exports = {
   name: "settings",
@@ -18,7 +16,53 @@ module.exports = {
     .addSubcommand(subcommand => {
       return subcommand
         .setName("set")
-        .setDescription("Set your settings.");
+        .setDescription("Set your settings.")
+        .addStringOption(option => {
+          return option
+            .setName("option")
+            .setDescription("The option to change")
+            .setRequired(true)
+            .addChoices(
+              {
+                "name": "Automatic Verification",
+                "value": "verification_toggle"
+              },
+              {
+                "name": "Verification Password",
+                "value": "verification_password"
+              },
+              {
+                "name": "Welcome Message",
+                "value": "verification_welcome"
+              },
+              {
+                "name": "Verification Channel",
+                "value": "channels_verification"
+              },
+              {
+                "name": "Introduction Channel",
+                "value": "channels_introduction"
+              },
+              {
+                "name": "Roles Needed",
+                "value": "roles_amount"
+              },
+              {
+                "name": "Add Roles",
+                "value": "roles_add"
+              },
+              {
+                "name": "Remove Roles",
+                "value": "roles_remove"
+              }
+            );
+        })
+        .addStringOption(option => {
+          return option
+            .setName("value")
+            .setDescription("Value of the option. Use /help to learn more about the options")
+            .setRequired(true);
+        });
     }),
   /**
      * @param {Client} client
@@ -26,17 +70,21 @@ module.exports = {
      * @param {CommandInteractionOptionResolver} options
      */
   run: async (client, interaction, options) => {
-    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null) await client.models.Setting.create({ guildId: interaction.guild.id, autoVerify: false, verificationChannel: " ", addRoles: " ", removeRoles: " ", rolesRequired: 0, introChannel: " ", verificationPhrase: " ", welcomeChannel: " ", welcomeMessage: " " });
+    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null)
+      await client.models.Setting.create({
+        guildId: interaction.guild.id,
+        verification_toggle: false,
+        channels_verification: " ",
+        roles_add: " ",
+        roles_remove: " ",
+        roles_amount: 0,
+        channels_introduction: " ",
+        verification_password: " ",
+        channels_welcome: " ",
+        verification_welcome: " "
+      });
     const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
     const subcommand = options.getSubcommand();
-    const filter = (m) => m.author.id === interaction.user.id;
-    const vars = [
-      ["{{user}}", "Mentions the user"],
-      ["{{user.tag}}", "User tag"],
-      ["{{user.id}}", "User ID"],
-      ["{{guild}}", "Server name"],
-      ["{{guild.id}}", "Server ID"],
-    ];
     
     // Permission checks
     if(!interaction.member.permissions.has("MANAGE_ROLES")) return interactionEmbed(3, "[ERR-UPRM]", "You must be able to manage roles to use this command", interaction, client, [true, 15]);
@@ -45,150 +93,209 @@ module.exports = {
       if(settings === null) return interaction.followUp({ content: "No settings found for your server!" });
       await interaction.editReply({ content: "Your settings have been shown as a message only you can see" });
 
-      interaction.followUp({ embeds: [new MessageEmbed({
+      interaction.followUp({ embeds: [{
         title: "Settings",
         description: `Settings for \`${interaction.guild.name}\``,
         fields: [
-          { name: "Auto Verify", value: settings.autoVerify === true ? "Enabled" : "Disabled", inline: true },
-          { name: "Password", value: settings.verificationPhrase === " " ? "(None set)" : `||${settings.verificationPhrase}||`, inline: true },
-          { name: "Verification Channel", value: settings.verificationChannel === " " ? "(No channel)" : `<#${settings.verificationChannel}>`, inline: true },
-          { name: "Welcome Channel", value: settings.welcomeChannel === " " ? "(No channel)" : `<#${settings.welcomeChannel}>`, inline: true },
-          { name: "Welcome Message", value: settings.welcomeMessage === " " ? "(None set)" : settings.welcomeMessage, inline: true },
-          { name: "Intro Channel", value: settings.introChannel === " " ? "(No channel)" : `<#${settings.introChannel}>`, inline: true },
-          { name: "Roles Required", value: String(settings.rolesRequired), inline: true },
-          { name: "Add Roles", value: settings.addRoles.split(",")[0] != " " ? settings.addRoles.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
-          { name: "Remove Roles", value: settings.removeRoles.split(",")[0] != " " ? settings.removeRoles.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
+          { name: "Auto Verify", value: settings.verification_toggle === true ? "Enabled" : "Disabled", inline: true },
+          { name: "Password", value: settings.verification_password === " " ? "(None set)" : `||${settings.verification_password}||`, inline: true },
+          { name: "Verification Channel", value: settings.channels_verification === " " ? "(No channel)" : `<#${settings.channels_verification}>`, inline: true },
+          { name: "Welcome Channel", value: settings.channels_welcome === " " ? "(No channel)" : `<#${settings.channels_welcome}>`, inline: true },
+          { name: "Welcome Message", value: settings.verification_welcome === " " ? "(None set)" : settings.verification_welcome, inline: true },
+          { name: "Intro Channel", value: settings.channels_introduction === " " ? "(No channel)" : `<#${settings.channels_introduction}>`, inline: true },
+          { name: "Roles Required", value: String(settings.roles_amount), inline: true },
+          { name: "Add Roles", value: settings.roles_add.split(",")[0] != " " ? settings.roles_add.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
+          { name: "Remove Roles", value: settings.roles_remove.split(",")[0] != " " ? settings.roles_remove.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
         ]
-      })], ephemeral: true });
-
-      setTimeout(async () => { if(!(await interaction.fetchReply()).deleted) interaction.deleteReply(); }, 10000);
+      }], ephemeral: true });
     } else if(subcommand === "set") {
       // If we cannot see the channel and its messages, return
-      if(!interaction.guild.me.permissionsIn(interaction.channel).has(68608)) return interactionEmbed(3, "[ERR-BPRM]", "I cannot read messages, send messages, or read the view history of this channel. Please grant me these permissions then try again", interaction, client, [true, 10]);
-
-      const option = await awaitMenu(interaction, 15, [1, 1], [
-        new SelectMenuOptionData({ value: "autoVerify", label: "Automatic verification", description: "Applys roles when a user says a password in a channel", emoji: "🛂" }).toJSON(),
-        new SelectMenuOptionData({ value: "verificationPassword", label: "Verification password", description: "Phrase required to trigger automatic verification", emoji: "🔐" }).toJSON(),
-        new SelectMenuOptionData({ value: "verificationChannel", label: "Verification channel", description: "Channel for users to enter the password in", emoji: "🛡️" }).toJSON(),
-        new SelectMenuOptionData({ value: "welcomeMessage", label: "Welcome message", description: "Message to send to new users", emoji: "📬" }).toJSON(),
-        new SelectMenuOptionData({ value: "welcomeChannel", label: "Welcome channel", description: "Channel to send the welcome message in", emoji: "📪" }).toJSON(),
-        new SelectMenuOptionData({ value: "introChannel", label: "Intro channel", description: "Channel for users to place their introduction in", emoji: "👋" }).toJSON(),
-        new SelectMenuOptionData({ value: "rolesRequired", label: "Roles required", description: "Number of roles required to trigger automatic verification", emoji: "🔢" }).toJSON(),
-        new SelectMenuOptionData({ value: "addRoles", label: "Add roles", description: "Roles to add when a user says a password in a channel", emoji: "📤" }).toJSON(),
-        new SelectMenuOptionData({ value: "removeRoles", label: "Remove roles", description: "Roles to remove when a user says a password in a channel", emoji: "📥" }).toJSON(),
-      ], "What option would you like to set?", false);
-      if(option === null) return;
-      await option.deleteReply();
-
-      if(option.values[0] === "autoVerify") {
-        const newValue = await awaitButtons(interaction, 15, [
-          new MessageButton({ style: "PRIMARY", customId: "yes", label: "Yes" }),
-          new MessageButton({ style: "SECONDARY", customId: "no", label: "No" })
-        ], "Do you want to automatically verify members?", true);
-        await newValue.deleteReply();
-        if(newValue === null) return;
-
-        await client.models.Setting.update({ autoVerify: newValue.customId === "yes" ? true : false }, { where: { guildId: interaction.guild.id } });
-
-        interactionEmbed(1, "", `Successfully ${newValue.customId === "yes" ? "enabled" : "disabled"} automatic verification. Make sure to check your settings`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "verificationPassword") {
-        await interaction.editReply({ content: "Please enter the password that users must say to trigger verification **(Case sensitive)**" });
-        const password = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-
-        if(!password) return interactionEmbed(3, "[ERR-ARGS]", "No password was entered", interaction, client, [true, 10]);
-        password.first().delete();
-        if(password.first().content === "(None set)") return interactionEmbed(3, "[ERR-ARGS]", "You cannot use the default password", interaction, client, [true, 10]);
-        if(password.first().content.length > 32) return interactionEmbed(3, "[ERR-ARGS]", "Your password is too long (Max: 32 characters)", interaction, client, [true, 10]);
-        await client.models.Setting.update({ verificationPhrase: password.first().content }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the password to \`${password.first().content}\``, interaction, client, [true, 15]);
-      } else if(option.values[0] === "addRoles") {
-        await interaction.editReply({ content: "Please mention the roles (Separated by commas) to add when a user says the password" });
-        const roles = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-        
-        if(!roles) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid role(s)", interaction, client, [true, 10]);
-        if(roles.first().mentions.roles.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid role(s)", interaction, client, [true, 10]);
-        const cleanRoles = roles.first().mentions.roles.map((_k, v) => v.replace(/[<@&>]/g, ""));
-        roles.first().delete();
-        if(!cleanRoles.some(i => { return settings.removeRoles.split(",").indexOf(i) === -1; })) return interactionEmbed(3, "[ERR-ARGS]", "There is a conflict! One of the roles mentioned is in the remove roles list", interaction, client, [true, 10]);
-        await client.models.Setting.update({ addRoles: cleanRoles.join(",") }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the roles to add to members when they say the password to: ${cleanRoles.map(i => `<@&${i}>`).join(", ")}`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "removeRoles") {
-        await interaction.editReply({ content: "Please mention the roles (Separated by commas) to remove when a user says the password" });
-        const roles = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-        
-        if(!roles) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid role(s)", interaction, client, [true, 10]);
-        if(roles.first().mentions.roles.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid role(s)", interaction, client, [true, 10]);
-        roles.first().delete();
-        const cleanRoles = roles.first().mentions.roles.map((_k, v) => v.replace(/[<@&>]/g, ""));
-        if(!cleanRoles.some(i => { return settings.addRoles.split(",").indexOf(i) === -1; })) return interactionEmbed(3, "[ERR-ARGS]", "There is a conflict! One of the roles mentioned is in the add roles list", interaction, client, [true, 10]);
-        await client.models.Setting.update({ removeRoles: cleanRoles.join(",") }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the roles to remove from members when they say the password to: ${cleanRoles.map(i => `<@&${i}>`).join(", ")}`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "introChannel") {
-        await interaction.editReply({ content: "Please mention the channels (Separated by commas) to use as introduction channels" });
-        const channels = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-        
-        if(!channels) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid channel(s)", interaction, client, [true, 10]);
-        if(channels.first().mentions.channels.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter valid channel(s)", interaction, client, [true, 10]);
-        const cleanChannels = channels.first().mentions.channels.map((_k, v) => v.replace(/[<#>]/g, ""));
-        channels.first().delete();
-        await client.models.Setting.update({ introChannel: cleanChannels.join(",") }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the introduction channels to: ${cleanChannels.map(i => `<#${i}>`).join(", ")}`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "rolesRequired") {
-        await interaction.editReply({ content: "Please say how many roles are needed to pass verification (1, etc.)" });
-        const num = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-
-        if(!num) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid number", interaction, client, [true, 10]);
-        const cleanNumber = Math.floor(num.first().content);
-        num.first().delete();
-        if(cleanNumber === "NaN") return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid number", interaction, client, [true, 10]);
-        if(cleanNumber < 1 || cleanNumber > 15) return interactionEmbed(3, "[ERR-ARGS]", "Your number cannot be lower than 1 or higher than 15", interaction, client, [true, 10]);
-        await client.models.Setting.update({ rolesRequired: cleanNumber }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the number of roles required to pass verification to: ${cleanNumber}`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "verificationChannel") {
-        await interaction.editReply({ content: "Please mention the channel where users will verify themselves" });
-        const channel = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-        
-        if(!channel) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        if(channel.first().mentions.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        channel.first().delete();
-        const cleanChannel = channel.first().mentions.channels.first().toString().replace(/[<#>]/g, "");
-        await client.models.Setting.update({ verificationChannel: cleanChannel }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the verification channel to: <#${cleanChannel}>`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "welcomeMessage") {
-        await interaction.editReply({ content: `Please say the welcome message. Variables are listed below\n\n>>> ${vars.map(v => `${v[0]}: ${v[1]}`).join("\n")}` });
-        const message = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 30000, errors: ["time"] })
-          .catch(() => { return undefined; });
-
-        if(!message) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid message", interaction, client, [true, 10]);
-        message.first().delete();
-        const cleanMessage = message.first().content;
-        await client.models.Setting.update({ welcomeMessage: cleanMessage }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the welcome message to: ${cleanMessage}`, interaction, client, [true, 20]);
-      } else if(option.values[0] === "welcomeChannel") {
-        await interaction.editReply({ content: "Please mention the channel to place the welcome message in" });
-        const channel = await interaction.channel
-          .awaitMessages({ filter, max: 1, time: 15000, errors: ["time"] })
-          .catch(() => { return undefined; });
-
-        if(!channel) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        if(channel.first().mentions.length === 0) return interactionEmbed(3, "[ERR-ARGS]", "You didn't enter a valid channel", interaction, client, [true, 10]);
-        channel.first().delete();
-        const cleanChannel = channel.first().mentions.channels.first().toString().replace(/[<#>]/g, "");
-        await client.models.Setting.update({ welcomeChannel: cleanChannel }, { where: { guildId: interaction.guild.id } });
-        interactionEmbed(1, "", `Successfully set the welcome channel to: <#${cleanChannel}>`, interaction, client, [true, 20]);
+      if(!interaction.guild.members.me.permissionsIn(interaction.channel).has(68608)) return interactionEmbed(3, "[ERR-BPRM]", "I cannot read messages, send messages, or read the view history of this channel. Please grant me these permissions then try again", interaction, client, [true, 10]);
+      const option = options.getString("option");
+      let value = options.getString("value");
+      let error = false;
+      switch(option) {
+      case "verification_toggle": {
+        if(typeof value.trim().toLowerCase() == "boolean") return interactionEmbed(3, "[ERR-ARGS]", "You must enter a truthy of falsy value (0/1, true/false)", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            verification_toggle: value.trim().toLowerCase() == true ? true : false
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`verification_toggle\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[SQL-ERR]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `${value.trim().toLowerCase() == true ? "Enabled" : "Disabled"} automatic verification`, interaction, client, [true, 10]);
+        break;
+      }
+      case "verification_password": {
+        value = String(value);
+        // Prevent leaking of properties
+        if(value.trim().length < 3 || value.trim().length > 128) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a password longer than 3 characters and shorter than 128 characters", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            verification_password: value.trim()
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`verification_password\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the password to: ||\`${value.trim()}\`||`, interaction, client, [true, 10]);
+        break;
+      }
+      case "verification_welcome": {
+        if(value.trim().length < 1 || value.trim().length > 1024) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a message longer than 1 character and shorter than 1024 characters", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            verification_welcome: value.trim()
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`verification_welcome\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the welcome message to: \`${value.trim()}\``, interaction, client, [true, 10]);
+        break;
+      }
+      case "channels_verification": {
+        const channelRegex = /^<#[0-9]{18}>$/;
+        if(!interaction.guild.channels.cache.has(value.trim()) && !channelRegex.test(value.trim())) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid channel mention or ID", interaction, client, [true, 15]);
+        if(channelRegex.test(value.trim()) && !interaction.guild.channels.cache.has(value.trim().replace(/^<#/, "").replace(/>$/, ""))) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid channel mention", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            channels_verification: channelRegex.test(value.trim()) ? value.trim().replace(/^<#/, "").replace(/>$/, "") : value.trim()
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`verification_channel\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the verification channel to: <#${channelRegex.test(value.trim()) ? value.trim().replace(/^<#/, "").replace(/>$/, "") : value.trim()}>`, interaction, client, [true, 10]);
+        break;
+      }
+      case "channels_introduction": {
+        const channelRegex = /^<#[0-9]{18}>$/;
+        // Accept multiple channel IDs or mentions, separated by spaces or commas
+        const channels = value.trim().split(/[ ,]+/);
+        for(let i = 0; i < channels.length; i++) {
+          if(channels[i] == "") channels.splice(channels[i], 1); // Ignore empty strings
+          if(!interaction.guild.channels.cache.has(channels[i]) && !channelRegex.test(channels[i])) return interactionEmbed(3, "[ERR-ARGS]", `You must enter valid channel mentions or IDs (${i})`, interaction, client, [true, 15]);
+          if(channelRegex.test(channels[i]) && !interaction.guild.channels.cache.has(channels[i].replace(/^<#/, "").replace(/>$/, ""))) return interactionEmbed(3, "[ERR-ARGS]", `You must enter valid channel mentions (${i})`, interaction, client, [true, 15]);
+          if(channelRegex.test(channels[i])) channels[i] = channels[i].replace(/^<#/, "").replace(/>$/, ""); // Strip ID from channel mention
+        }
+        try {
+          client.models.Setting.update({
+            channels_introduction: JSON.stringify(channels)
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`channels_introduction\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the introduction channels to: <#${channels.join(">, <#")}>`, interaction, client, [true, 10]);
+        break;
+      }
+      case "roles_amount": {
+        if(isNaN(value.trim())) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a number", interaction, client, [true, 15]);
+        if(parseInt(value.trim()) > 249) return interactionEmbed(3, "[ERR-ARGS]", "You cannot select more than 249 roles", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            roles_amount: parseInt(value.trim())
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`role_amount\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the role amount to: \`${value.trim()}\``, interaction, client, [true, 10]);
+        break;
+      }
+      case "roles_add": {
+        // Accept role IDs or mentions separated by commas (Commas with spaces are allowed)
+        value = value.trim().split(/[, ]+/);
+        if(value.length > 249) return interactionEmbed(3, "[ERR-ARGS]", "You cannot select more than 249 roles", interaction, client, [true, 15]);
+        for(let i = 0; i < value.length; i++) {
+          if(value[i] == "") value.splice(value[i], 1); // Ignore empty strings
+          value[i] = value[i].replace("<@&", "").replace(">", ""); // Strip the mention if it exists
+          if(!parseInt(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID or mention", interaction, client, [true, 15]); 
+          if(!interaction.guild.roles.cache.has(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID", interaction, client, [true, 15]);
+          if(Array.from(settings.roles_remove).includes(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You cannot add a role that is already in the remove list", interaction, client, [true, 15]);
+        }
+        try {
+          client.models.Setting.update({
+            roles_add: value.join(",")
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`roles_add\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Added the following roles to the add list: \`${value.join(", ")}\``, interaction, client, [true, 10]);
+        break;
+      }
+      case "roles_remove": {
+        // Accept role IDs or mentions separated by commas (Commas with spaces are allowed)
+        value = value.trim().split(/[, ]+/);
+        if(value.length > 249) return interactionEmbed(3, "[ERR-ARGS]", "You cannot select more than 249 roles", interaction, client, [true, 15]);
+        for(let i = 0; i < value.length; i++) {
+          if(value[i] == "") value.splice(value[i], 1); // Ignore empty strings
+          value[i] = value[i].replace("<@&", "").replace(">", ""); // Strip the mention if it exists
+          if(!parseInt(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID or mention", interaction, client, [true, 15]); 
+          if(!interaction.guild.roles.cache.has(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID", interaction, client, [true, 15]);
+          if(Array.from(settings.roles_add).includes(value[i]))
+            return interactionEmbed(3, "[ERR-ARGS]", "You cannot add a role that is already in the add list", interaction, client, [true, 15]);
+        }
+        try {
+          client.models.Setting.update({
+            roles_remove: value.join(",")
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`roles_remove\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Added the following roles to the remove list: \`${value.join(", ")}\``, interaction, client, [true, 10]);
+        break;
+      }
       }
     }
   }

@@ -1,11 +1,10 @@
-const { Client, Collection } = require("discord.js");
+const { Client, Collection, IntentsBitField, InteractionType } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { Sequelize } = require("sequelize");
 const { Routes } = require("discord-api-types/v9");
 const { interactionEmbed, toConsole } = require("./functions.js");
-const AsciiTable = require("ascii-table");
 const config = require("./config.json");
-const rest = new REST({ version: 9 }).setToken(config.bot.token);
+const rest = new REST({ version: 10 }).setToken(config.bot.token);
 const fs = require("fs");
 const wait = require("util").promisify(setTimeout);
 let ready = false;
@@ -36,7 +35,7 @@ if(!fs.existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: ["GUILDS","GUILD_BANS","GUILD_MEMBERS","GUILD_MESSAGES"],
+  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages],
   sweepers: {
     "messages": {
       lifetime: 10,
@@ -50,8 +49,6 @@ client.sequelize = sequelize;
 client.models = sequelize.models;
 
 (async () => {
-  const table = new AsciiTable("Commands");
-  table.addRow("testing-file.js", "Loaded");
   if(!fs.existsSync("./commands")) return console.info("[FILE-LOAD] No 'commands' folder found, skipping command loading");
   const commands = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
   console.info(`[FILE-LOAD] Loading files, expecting ${commands.length} files`);
@@ -65,12 +62,10 @@ client.models = sequelize.models;
         console.info(`[FILE-LOAD] Loaded: ${file}`);
         slashCommands.push(command.data.toJSON());
         client.commands.set(command.name, command);
-        table.addRow(command.name, "Loaded");
       }
     } catch(e) {
       console.warn(`[FILE-LOAD] Unloaded: ${file}`);
       console.warn(`[FILE-LOAD] ${e}`);
-      table.addRow(file, "Unloaded");
     }
   }
 
@@ -96,11 +91,9 @@ client.models = sequelize.models;
     
     const then = Date.now();
     console.info(`[APP-CMD] Successfully reloaded application (/) commands after ${then - now}ms.`);
-    console.info(table.toString());
   } catch(error) {
     console.error("[APP-CMD] An error has occurred while attempting to refresh application commands.");
     console.error(`[APP-CMD] ${error}`);
-    console.info(table.toString());
   }
   console.info("[FILE-LOAD] All files loaded successfully");
   ready = true;
@@ -111,7 +104,7 @@ client.models = sequelize.models;
 client.on("ready", async () => {
   console.info("[READY] Client is ready");
   console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
-  toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, "client.on(ready)", client);
+  toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, new Error().stack, client);
   // Set the status to new Date();
   client.guilds.cache.each(g => g.members.fetch());
   client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
@@ -137,7 +130,7 @@ client.on("interactionCreate", async (interaction) => {
   if(!interaction.inGuild()) return interactionEmbed(4, "[WARN-NODM]", "", interaction, client, [true, 10]);
   if(!ready) return interactionEmbed(4, "", "The bot is starting up, please wait", interaction, client, [true, 10]);
   
-  if(interaction.isCommand()) {
+  if(interaction.type === InteractionType.ApplicationCommand) {
     let command = client.commands.get(interaction.commandName);
     await interaction.deferReply({ ephemeral: false });
     // await interaction.deferReply({ ephemeral: command.ephemeral });
@@ -145,7 +138,7 @@ client.on("interactionCreate", async (interaction) => {
       command.run(client, interaction, interaction.options)
         .catch((e) => {
           interaction.editReply("Something went wrong while executing the command. Please report this to <@409740404636909578> (Tavi#0001)");
-          toConsole(e.stack, `command.run(${command.name})`, client);
+          toConsole(e.stack, new Error().stack, client);
         });
     }
     await wait(1e4);
@@ -284,7 +277,7 @@ process.on("uncaughtException", (err, origin) => {
     console.error(origin);
     return process.exit(14);
   }
-  toConsole(`An [uncaughtException] has occurred.\n\n> ${err}\n> ${origin}`, "process.on('uncaughtException')", client);
+  toConsole(`An [uncaughtException] has occurred.\n\n> ${err}\n> ${origin}`, new Error().stack, client);
 });
 process.on("unhandledRejection", async (promise) => {
   if(!ready) {
@@ -295,14 +288,14 @@ process.on("unhandledRejection", async (promise) => {
   const suppressChannel = await client.channels.fetch(config.discord.suppressChannel).catch(() => { return undefined; });
   if(!suppressChannel) return console.error(`An [unhandledRejection] has occurred.\n\n> ${promise}`);
   if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message") || String(promise).includes("rCannot read properties of undefined (reading 'ephemeral')")) return suppressChannel.send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
-  toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, "process.on('unhandledRejection')", client);
+  toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, new Error().stack, client);
 });
 process.on("warning", async (warning) => {
   if(!ready) {
     console.warn("Heads up: there is a [warning] during start up");
     console.warn(warning);
   }
-  toConsole(`A [warning] has occurred.\n\n> ${warning}`, "process.on('warning')", client);
+  toConsole(`A [warning] has occurred.\n\n> ${warning}`, new Error().stack, client);
 });
 process.on("exit", (code) => {
   console.error("[EXIT] The process is exiting!");
