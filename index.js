@@ -36,7 +36,7 @@ if(!fs.existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages],
+  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent],
   sweepers: {
     "messages": {
       lifetime: 10,
