@@ -15,8 +15,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: npm install
-        
-      - name: Run ESLint
-        run: npx eslint ./
+      - name: ESLint Action eslintrc
+        uses: mrdivyansh/eslint-action@v1.0.7
