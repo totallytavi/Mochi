@@ -157,8 +157,8 @@ client.on("messageCreate", async (message) => {
    * Conditions for automatic verification to work:
    * - Must have auto verification enabled
    * - Must have an introduction and verification channel
-   * - Need VIEW_CHANNEL, SEND_MESSAGES, MANAGE_MESSAGES, and ADD_REACTIONS in verificationChannel
-   * - Need VIEW_CHANNEL, SEND_MESSAGES, EMBED_LINKS, and ADD_FILES in welcomeChannel
+   * - Need VIEW_CHANNEL, SEND_MESSAGES, MANAGE_MESSAGES, and ADD_REACTIONS in channels_verification
+   * - Need VIEW_CHANNEL, SEND_MESSAGES, EMBED_LINKS, and ADD_FILES in channels_welcome
    * - If roles need to be managed, must have MANAGE_ROLES permissions
    * - If there is a role that is higher than the bot, it will skip it
    */
@@ -178,7 +178,7 @@ client.on("messageCreate", async (message) => {
   if(!settings.autoVerify) return;
 
   // Setting validation
-  if(message.channel.id != settings.verificationChannel) return;
+  if(message.channel.id != settings.channels_verification) return;
   await message.react("🕐");
   const reactions = message.reactions.cache.filter(r => r.emoji.name === "🕐");
 
@@ -188,25 +188,25 @@ client.on("messageCreate", async (message) => {
     return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
       .then(m => remove(7500, m, message));
   }
-  if(settings.welcomeChannel != " " && !message.guild.me.permissionsIn(settings.welcomeChannel).has(51200)) {
+  if(settings.channels_welcome != " " && !message.guild.me.permissionsIn(settings.channels_welcome).has(51200)) {
     reactions.each(r => r.remove());
-    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> ${message.guild.me.permissionsIn(settings.welcomeChannel).missing(51200).join("\n")}`)
+    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> ${message.guild.me.permissionsIn(settings.channels_welcome).missing(51200).join("\n")}`)
       .then(m => remove(7500, m, message));
   }
 
   // Roles required
-  if(settings.rolesRequired != " " && message.member.roles.cache.size < settings.rolesRequired) {
+  if(settings.roles_amount != " " && message.member.roles.cache.size < settings.roles_amount) {
     reactions.each(r => r.remove());
-    return message.reply({ content: `\`❌\` You need ${settings.rolesRequired} roles to verify, you currently have ${message.member.roles.cache.size} roles` })
+    return message.reply({ content: `\`❌\` You need ${settings.roles_amount} roles to verify, you currently have ${message.member.roles.cache.size} roles` })
       .then(m => remove(5000, m, message));
   }
   // Intro channel
-  if(settings.introChannel === " ") {
+  if(settings.channels_introduction === " ") {
     reactions.each(r => r.remove());
     return message.reply({ content: "`❌` The bot is not configured to have an intro channel" })
       .then(m => remove(5000, m, message));
   }
-  const splitIntro = settings.introChannel.split(",");
+  const splitIntro = settings.channels_introduction.split(",");
   let intro = false;
   for(let i = 0; intro === false; i++) {
     if(i > splitIntro.length - 1) {
@@ -217,21 +217,21 @@ client.on("messageCreate", async (message) => {
     await client.channels.cache.get(splitIntro[i]).messages.fetch();
     if(client.channels.cache.get(splitIntro[i]).messages.cache.some(m => m.author.id === message.author.id)) intro = true;
   }
-  // VerificationPhrase
-  if(settings.verificationPhrase != " " && message.content != settings.verificationPhrase) {
+  // Password check
+  if(settings.verification_password != " " && message.content != settings.verification_password) {
     reactions.each(r => r.remove());
     return message.reply({ content: "`❌` The password is incorrect" })
       .then(m => remove(5000, m, message));
   }
 
   // Apply roles
-  if((settings.addRoles[0] != " " || settings.removeRoles[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
+  if((settings.roles_add[0] != " " || settings.roles_remove[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
     reactions.each(r => r.remove());
     return message.reply({ content: "`❌` I cannot modify roles. Please inform server staff of this issue" })
       .then(m => remove(5000, m, message));
   }
-  const addRoles = settings.addRoles.split(",");
-  for(const role of addRoles) {
+  const roles_add = settings.roles_add.split(",");
+  for(const role of roles_add) {
     if(role === " ") continue;
     if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
     if(message.member.roles.cache.has(role)) continue;
@@ -239,8 +239,8 @@ client.on("messageCreate", async (message) => {
   }
   await wait(250); // Prevent instant sending due to rate limits and potentially outdated caches
   await message.member.fetch();
-  const removeRoles = settings.removeRoles.split(",");
-  for(const role of removeRoles) {
+  const roles_remove = settings.roles_remove.split(",");
+  for(const role of roles_remove) {
     if(role === " ") continue;
     if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
     if(!message.member.roles.cache.has(role)) continue;
@@ -248,9 +248,9 @@ client.on("messageCreate", async (message) => {
   }
 
   // Welcome message
-  if(settings.welcomeChannel != " ") {
-    const welcomeMessage = await client.channels.cache.get(settings.welcomeChannel);
-    const welcomeContent = settings.welcomeMessage
+  if(settings.channels_welcome != " ") {
+    const channel = await client.channels.cache.get(settings.channels_welcome);
+    const welcomeContent = settings.verification_welcome
       .replaceAll("{{user}}", `<@${message.author.id}>`)
       .replaceAll("{{user.tag}}", `${message.author.username}`)
       .replaceAll("{{user.id}}", `${message.author.id}`)
@@ -262,7 +262,7 @@ client.on("messageCreate", async (message) => {
       .replaceAll("{{guild.ownerUser}}", `${(await message.guild.fetchOwner()).user.tag}`)
       .replaceAll("{{guild.ownerID}}", `${(await message.guild.fetchOwner()).id}`);
 
-    welcomeMessage.send({ content: welcomeContent });
+    channel.send({ content: welcomeContent });
   }
   
   // Remove all items
