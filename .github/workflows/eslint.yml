@@ -17,3 +17,8 @@ jobs:
 
       - name: ESLint Action eslintrc
         uses: mrdivyansh/eslint-action@v1.0.7
+        if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }} 
+        with:
+          repo-token: ${{secrets.GITHUB_TOKEN}}
+          eslint-rc: .eslintrc.js
+          execute-on-files: ./
