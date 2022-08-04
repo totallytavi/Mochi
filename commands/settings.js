@@ -102,10 +102,10 @@ module.exports = {
           { name: "Verification Channel", value: settings.channels_verification === " " ? "(No channel)" : `<#${settings.channels_verification}>`, inline: true },
           { name: "Welcome Channel", value: settings.channels_welcome === " " ? "(No channel)" : `<#${settings.channels_welcome}>`, inline: true },
           { name: "Welcome Message", value: settings.verification_welcome === " " ? "(None set)" : settings.verification_welcome, inline: true },
-          { name: "Intro Channel", value: settings.channels_introduction === " " ? "(No channel)" : `<#${settings.channels_introduction}>`, inline: true },
+          { name: "Intro Channel", value: settings.channels_introduction === " " ? "(No channel)" : `<#${Array.from(settings.channels_introduction).join(">, <#")}>`, inline: true },
           { name: "Roles Required", value: String(settings.roles_amount), inline: true },
-          { name: "Add Roles", value: settings.roles_add.split(",")[0] != " " ? settings.roles_add.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
-          { name: "Remove Roles", value: settings.roles_remove.split(",")[0] != " " ? settings.roles_remove.split(",").map(i => `<@&${i}>`).join(", ") : "(None set)", inline: true },
+          { name: "Add Roles", value: settings.roles_add != " " ? `<@&${Array.from(settings.roles_add).join(">, <@&")}>` : "(None set)", inline: true },
+          { name: "Remove Roles", value: settings.roles_remove != " " ? `<@&${Array.from(settings.roles_remove).join(">, <@&")}>` : "(None set)", inline: true },
         ]
       }], ephemeral: true });
     } else if(subcommand === "set") {
