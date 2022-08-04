@@ -124,7 +124,7 @@ client.on("ready", async () => {
   setInterval(() => {
     client.guilds.cache.each(g => g.members.fetch());
     client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
-  }, 60000);
+  }, 30_000);
 });
 
 client.on("interactionCreate", async (interaction) => {
