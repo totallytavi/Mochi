@@ -25,6 +25,10 @@ module.exports.import = (sequelize) => sequelize.define("Setting", {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  channels_welcome: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
   roles_amount: {
     type: DataTypes.INTEGER,
     allowNull: false

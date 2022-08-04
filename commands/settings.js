@@ -32,6 +32,10 @@ module.exports = {
                 "value": "verification_password"
               },
               {
+                "name": "Welcome Channel",
+                "value": "channels_welcome"
+              },
+              {
                 "name": "Welcome Message",
                 "value": "verification_welcome"
               },
@@ -74,14 +78,14 @@ module.exports = {
       await client.models.Setting.create({
         guildId: interaction.guild.id,
         verification_toggle: false,
+        verification_password: " ",
+        verification_welcome: " ",
         channels_verification: " ",
+        channels_welcome: " ",
+        channels_introduction: " ",
         roles_add: " ",
         roles_remove: " ",
-        roles_amount: 0,
-        channels_introduction: " ",
-        verification_password: " ",
-        channels_welcome: " ",
-        verification_welcome: " "
+        roles_amount: 0
       });
     const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
     const subcommand = options.getSubcommand();
@@ -101,11 +105,11 @@ module.exports = {
           { name: "Password", value: settings.verification_password === " " ? "(None set)" : `||${settings.verification_password}||`, inline: true },
           { name: "Verification Channel", value: settings.channels_verification === " " ? "(No channel)" : `<#${settings.channels_verification}>`, inline: true },
           { name: "Welcome Channel", value: settings.channels_welcome === " " ? "(No channel)" : `<#${settings.channels_welcome}>`, inline: true },
-          { name: "Welcome Message", value: settings.verification_welcome === " " ? "(None set)" : settings.verification_welcome, inline: true },
-          { name: "Intro Channel", value: settings.channels_introduction === " " ? "(No channel)" : `<#${Array.from(settings.channels_introduction).join(">, <#")}>`, inline: true },
+          { name: "Welcome Message", value: settings.verification_welcome === " " ? "(None set)" : String(settings.verification_welcome), inline: true },
+          { name: "Intro Channel", value: settings.channels_introduction === " " ? "(No channel)" : `<#${settings.channels_introduction.split(",").join(">, <#")}>`, inline: true },
           { name: "Roles Required", value: String(settings.roles_amount), inline: true },
-          { name: "Add Roles", value: settings.roles_add != " " ? `<@&${Array.from(settings.roles_add).join(">, <@&")}>` : "(None set)", inline: true },
-          { name: "Remove Roles", value: settings.roles_remove != " " ? `<@&${Array.from(settings.roles_remove).join(">, <@&")}>` : "(None set)", inline: true },
+          { name: "Add Roles", value: settings.roles_add != " " ? `<@&${settings.roles_add.split(",").join(">, <@&")}>` : "(None set)", inline: true },
+          { name: "Remove Roles", value: settings.roles_remove != " " ? `<@&${settings.roles_remove.split(",").join(">, <@&")}>` : "(None set)", inline: true },
         ]
       }], ephemeral: true });
     } else if(subcommand === "set") {
@@ -215,6 +219,26 @@ module.exports = {
         }
         if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
         interactionEmbed(1, "", `Set the introduction channels to: <#${channels.join(">, <#")}>`, interaction, client, [true, 10]);
+        break;
+      }
+      case "channels_welcome": {
+        const channelRegex = /^<#[0-9]{18}>$/;
+        if(!interaction.guild.channels.cache.has(value.trim()) && !channelRegex.test(value.trim())) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid channel mention or ID", interaction, client, [true, 15]);
+        if(channelRegex.test(value.trim()) && !interaction.guild.channels.cache.has(value.trim().replace(/^<#/, "").replace(/>$/, ""))) return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid channel mention", interaction, client, [true, 15]);
+        try {
+          client.models.Setting.update({
+            channels_welcome: channelRegex.test(value.trim()) ? value.trim().replace(/^<#/, "").replace(/>$/, "") : value.trim()
+          }, {
+            where: {
+              guildId: interaction.guild.id
+            }
+          });
+        } catch(e) {
+          toConsole(`An error has occurred while updating \`channels_welcome\`: ${String(e)}`, new Error().stack, client);
+          error = true;
+        }
+        if(error) return interactionEmbed(3, "[ERR-SQL]", "An error occurred while updating the settings", interaction, client, [true, 15]);
+        interactionEmbed(1, "", `Set the welcome channel to: <#${channelRegex.test(value.trim()) ? value.trim().replace(/^<#/, "").replace(/>$/, "") : value.trim()}>`, interaction, client, [true, 10]);
         break;
       }
       case "roles_amount": {
