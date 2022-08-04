@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder} = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder, PermissionFlagsBits} = require("discord.js");
 const { interactionEmbed, toConsole } = require("../functions.js");
 
 module.exports = {
@@ -87,7 +87,7 @@ module.exports = {
     const subcommand = options.getSubcommand();
     
     // Permission checks
-    if(!interaction.member.permissions.has("MANAGE_ROLES")) return interactionEmbed(3, "[ERR-UPRM]", "You must be able to manage roles to use this command", interaction, client, [true, 15]);
+    if(!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) return interactionEmbed(3, "[ERR-UPRM]", "You must be able to manage roles to use this command", interaction, client, [true, 15]);
 
     if(subcommand === "view") {
       if(settings === null) return interaction.followUp({ content: "No settings found for your server!" });
