@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, EmbedBuilder, Interaction, ActionRow, ButtonBuilder } = require("discord.js");
+const { Client, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType } = require("discord.js");
 const config = require("./config.json");
 
 const errors = {
@@ -132,12 +132,12 @@ module.exports = {
     // Convert the time to milliseconds
     time *= 1000;
     // Create a ActionRow and add the buttons
-    const row = new ActionRow();
+    const row = new ActionRowBuilder();
     row.addComponents(buttons);
     // Send a follow-up message with the buttons and await a response
     const message = await interaction.followUp({ content: content, components: [row] });
     const res = await message
-      .awaitMessageComponent({ filter, componentType: "BUTTON", time: time, errors: ["time"] })
+      .awaitMessageComponent({ filter, componentType: ComponentType.Button, time: time, errors: ["time"] })
       .catch(() => { return null; });
     // Disable the buttons on row
     for(const button of row.components) {

@@ -7,7 +7,7 @@ module.exports = {
   ephemeral: false,
   data: new SlashCommandBuilder()
     .setName("uncollar")
-    .setDescription("Uncalims a user by removing the collar")
+    .setDescription("Unclaims a user by removing the collar")
     .addUserOption(option => {
       return option 
         .setName("user")
@@ -29,11 +29,11 @@ module.exports = {
     // Make sure the user is not already collared with that user
     const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id } });
     if(check === null) return interactionEmbed(3, "[ERR-ARGS]", "That user isn't collared by anyone", interaction, client, [true, 10]);
-    if(check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar users that yourself or those you've collared", interaction, client, [true, 10]);
+    if(check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar yourself or those you've collared", interaction, client, [true, 10]);
 
     // Confirmation
-    const confirmation = await awaitButtons(interaction, 15, [new ButtonBuilder({ customId: "yes", label: "Yes", style: "DANGER" }), new ButtonBuilder({ customId: "no", label: "No", style: "PRIMARY" })], `Are you sure you want to uncollar ${check.owner === interaction.user.id ? "your pet" : "yourself"}?`, false);
-    await confirmation.deleteReply();
+    const confirmation = await awaitButtons(interaction, 15, [new ButtonBuilder({ customId: "yes", label: "Yes", style: 4 }), new ButtonBuilder({ customId: "no", label: "No", style: 1 })], `Are you sure you want to uncollar ${check.owner === interaction.user.id ? "your pet" : "yourself"}?`, false);
+    if(confirmation != null) await confirmation.deleteReply();
     if(confirmation === null || confirmation.customId === "no") {
       return interactionEmbed(4, "", "Cancelled the command", interaction, client, [true, 10]);
     }
