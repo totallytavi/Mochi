@@ -112,6 +112,10 @@ module.exports = {
           { name: "Remove Roles", value: settings.roles_remove != " " ? `<@&${settings.roles_remove.split(",").join(">, <@&")}>` : "(None set)", inline: true },
         ]
       }], ephemeral: true });
+
+      setTimeout(() => {
+        interaction.deleteReply();
+      }, 12_500);
     } else if(subcommand === "set") {
       // If we cannot see the channel and its messages, return
       if(!interaction.guild.members.me.permissionsIn(interaction.channel).has(68608)) return interactionEmbed(3, "[ERR-BPRM]", "I cannot read messages, send messages, or read the view history of this channel. Please grant me these permissions then try again", interaction, client, [true, 10]);
