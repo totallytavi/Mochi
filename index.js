@@ -168,14 +168,30 @@ client.on("messageCreate", async (message) => {
   let settings;
   // Cache the settings for 30 seconds
   if(cache[0] + 30 < Math.floor(Date.now()/1000)) {
-    settings = await client.models.Setting.findOne({ where: { guildId: message.guild.id } });
+    [settings] = await client.models.Setting.findOrCreate({
+      where: {
+        guildId: message.guild.id
+      },
+      defaults: {
+        guildId: message.guild.id,
+        verification_toggle: false,
+        verification_password: " ",
+        verification_welcome: " ",
+        channels_verification: " ",
+        channels_welcome: " ",
+        channels_introduction: " ",
+        roles_add: " ",
+        roles_remove: " ",
+        roles_amount: 0
+      }
+    });
     cache = [Math.floor(Date.now()), settings];
   } else {
     settings = cache[1];
   }
-  if(settings === null) return;
   if(message.author.bot) return;
-  if(!settings.autoVerify) return;
+  if(!settings.verification_toggle) return;
+  if(!settings.channels_verification) return;
 
   // Setting validation
   if(message.channel.id != settings.channels_verification) return;
@@ -183,14 +199,14 @@ client.on("messageCreate", async (message) => {
   const reactions = message.reactions.cache.filter(r => r.emoji.name === "🕐");
 
   // Permissions checks
-  if(!message.guild.me.permissionsIn(message.channel).has(11328)) {
+  if(!message.guild.members.me.permissionsIn(message.channel).has(11328)) {
     reactions.each(r => r.remove());
-    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
+    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in this channel. Please inform server staff of this issue\n>>> \`\`\`${message.guild.members.me.permissionsIn(message.channel).missing(11328).join("\n")}\`\`\``)
       .then(m => remove(7500, m, message));
   }
-  if(settings.channels_welcome != " " && !message.guild.me.permissionsIn(settings.channels_welcome).has(51200)) {
+  if(settings.channels_welcome != " " && !message.guild.members.me.permissionsIn(settings.channels_welcome).has(51200)) {
     reactions.each(r => r.remove());
-    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> ${message.guild.me.permissionsIn(settings.channels_welcome).missing(51200).join("\n")}`)
+    return message.reply(`\`❌\` I am missing one or more of the following permissions in the list below in the welcome channel. Please inform server staff of this issue\n>>> ${message.guild.members.me.permissionsIn(settings.channels_welcome).missing(51200).join("\n")}`)
       .then(m => remove(7500, m, message));
   }
 
@@ -206,16 +222,25 @@ client.on("messageCreate", async (message) => {
     return message.reply({ content: "`❌` The bot is not configured to have an intro channel" })
       .then(m => remove(5000, m, message));
   }
-  const splitIntro = settings.channels_introduction.split(",");
+  const introChannels = JSON.parse(settings.channels_introduction);
   let intro = false;
   for(let i = 0; intro === false; i++) {
-    if(i > splitIntro.length - 1) {
+    console.log(i);
+    if(i > introChannels.length - 1) {
       reactions.each(r => r.remove());
-      return message.reply({ content: `\`❌\` You need an introduction posted one of the following channels: <#${splitIntro.join(">, <#")}>` })
+      return message.reply({ content: `\`❌\` You need an introduction posted one of the following channels: <#${introChannels.join(">, <#")}>` })
         .then(m => remove(5000, m, message));
     }
-    await client.channels.cache.get(splitIntro[i]).messages.fetch();
-    if(client.channels.cache.get(splitIntro[i]).messages.cache.some(m => m.author.id === message.author.id)) intro = true;
+    let messages = new Collection();
+    let end = false;
+    await client.channels.fetch(introChannels[i]);
+    // Fetch all messages
+    while(end) {
+      const coll = await client.channels.cache.get(introChannels[i]).messages.fetch({ limit: 100, before: messages.last().id ?? "" });
+      if(coll === null) end = true;
+      messages = messages.concat(coll);
+    }
+    if(client.channels.cache.get(introChannels[i]).messages.cache.some(m => m.author.id === message.author.id)) intro = true;
   }
   // Password check
   if(settings.verification_password != " " && message.content != settings.verification_password) {
@@ -225,7 +250,7 @@ client.on("messageCreate", async (message) => {
   }
 
   // Apply roles
-  if((settings.roles_add[0] != " " || settings.roles_remove[0] != " ") && !message.guild.me.permissions.has("MANAGE_ROLES")) {
+  if((settings.roles_add[0] != " " || settings.roles_remove[0] != " ") && !message.guild.members.me.permissions.has("MANAGE_ROLES")) {
     reactions.each(r => r.remove());
     return message.reply({ content: "`❌` I cannot modify roles. Please inform server staff of this issue" })
       .then(m => remove(5000, m, message));
@@ -233,7 +258,7 @@ client.on("messageCreate", async (message) => {
   const roles_add = settings.roles_add.split(",");
   for(const role of roles_add) {
     if(role === " ") continue;
-    if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
+    if(message.guild.members.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
     if(message.member.roles.cache.has(role)) continue;
     await message.member.roles.add(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
   }
@@ -242,7 +267,7 @@ client.on("messageCreate", async (message) => {
   const roles_remove = settings.roles_remove.split(",");
   for(const role of roles_remove) {
     if(role === " ") continue;
-    if(message.guild.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
+    if(message.guild.members.me.roles.highest.comparePositionTo(message.guild.roles.cache.get(role)) <= 0) continue;
     if(!message.member.roles.cache.has(role)) continue;
     await message.member.roles.remove(role, `Automatic verification by ${client.user.tag} (${client.user.id})`);
   }

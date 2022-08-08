@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder, PermissionFlagsBits} = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, SlashCommandBuilder, PermissionFlagsBits} = require("discord.js");
 const { interactionEmbed, toConsole } = require("../functions.js");
 
 module.exports = {
@@ -74,8 +74,11 @@ module.exports = {
      * @param {CommandInteractionOptionResolver} options
      */
   run: async (client, interaction, options) => {
-    if((await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } })) === null)
-      await client.models.Setting.create({
+    const [settings] = await client.models.Setting.findOrCreate({
+      where: {
+        guildId: interaction.guild.id
+      },
+      defaults: {
         guildId: interaction.guild.id,
         verification_toggle: false,
         verification_password: " ",
@@ -86,8 +89,8 @@ module.exports = {
         roles_add: " ",
         roles_remove: " ",
         roles_amount: 0
-      });
-    const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
+      }
+    });
     const subcommand = options.getSubcommand();
     
     // Permission checks
@@ -124,10 +127,12 @@ module.exports = {
       let error = false;
       switch(option) {
       case "verification_toggle": {
-        if(typeof value.trim().toLowerCase() == "boolean") return interactionEmbed(3, "[ERR-ARGS]", "You must enter a truthy of falsy value (0/1, true/false)", interaction, client, [true, 15]);
+        let bool = value.trim().toLowerCase();
+        if(typeof bool == "boolean") return interactionEmbed(3, "[ERR-ARGS]", "You must enter a truthy of falsy value (0/1, true/false)", interaction, client, [true, 15]);
+        bool = JSON.parse(bool.toLowerCase());
         try {
           client.models.Setting.update({
-            verification_toggle: value.trim().toLowerCase() == true ? true : false
+            verification_toggle: bool
           }, {
             where: {
               guildId: interaction.guild.id
@@ -138,7 +143,7 @@ module.exports = {
           error = true;
         }
         if(error) return interactionEmbed(3, "[SQL-ERR]", "An error occurred while updating the settings", interaction, client, [true, 15]);
-        interactionEmbed(1, "", `${value.trim().toLowerCase() == true ? "Enabled" : "Disabled"} automatic verification`, interaction, client, [true, 10]);
+        interactionEmbed(1, "", `${bool ? "Enabled" : "Disabled"} automatic verification`, interaction, client, [true, 10]);
         break;
       }
       case "verification_password": {

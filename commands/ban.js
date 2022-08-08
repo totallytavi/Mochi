@@ -45,8 +45,8 @@ module.exports = {
     if(!interaction.member.permissions.has("BAN_MEMBERS") && !interaction.member.roles.has(config.discord.devRole)) return interactionEmbed(3, "[ERR-UPRM]", "You do not have permission to ban members", interaction, client, [true, 10]);
     if(user != null &&  interaction.member.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-UPRM]", "You cannot ban someone equal to or higher than you on the role hierarchy", interaction, client, [true, 10]);
     // Bot permissions
-    if(!interaction.guild.me.permissions.has("BAN_MEMBERS")) return interactionEmbed(3, "[ERR-BPRM]", "I do not have permission to ban members", interaction, client, [true, 10]);
-    if(user != null &&  interaction.guild.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot ban someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
+    if(!interaction.guild.members.me.permissions.has("BAN_MEMBERS")) return interactionEmbed(3, "[ERR-BPRM]", "I do not have permission to ban members", interaction, client, [true, 10]);
+    if(user != null &&  interaction.guild.members.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot ban someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
     // Duration
     if(options.getString("length")) {
       var duration = parseTime(options.getString("length"));
