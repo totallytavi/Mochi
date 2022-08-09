@@ -40,8 +40,7 @@ module.exports = {
           .then(m => m.react("825893086043439144"));
       }
     } catch(e) {
-      const error = JSON.stringify(e);
-      console.log(String(e), error);
+      const error = `${String(e)}\n${e.stack}`;
       // Split the string into chunks of 2000 characters
       const chunks = error.match(/.{1,1900}/g);
       for(const chunk of chunks) {
