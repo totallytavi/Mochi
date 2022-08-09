@@ -31,11 +31,24 @@ module.exports = {
     await require("node:util").promisify(setTimeout)(1000); // Prevent instant eval (0-1ms, etc.)
     try {
       const result = await eval(options.getString("expression"));
-      interaction.editReply({ content: `\`\`\`js\n${JSON.stringify(result)}\n\`\`\` Execution time: ${Date.now() - then}ms` })
-        .then(m => m.react("825893086043439144"));
+      const str = JSON.stringify(result);
+      // Split the string into chunks of 2000 characters
+      const chunks = str.match(/.{1,1900}/g);
+      for(const chunk of chunks) {
+        await interaction.followUp({ content: `\`\`\`js\n${chunk}\n\`\`\`` });
+        if(chunks.indexOf(chunk) === chunks.length - 1) await interaction.followUp({ content: `Execution time: ${Date.now() - then}ms` })
+          .then(m => m.react("825893086043439144"));
+      }
     } catch(e) {
-      interaction.editReply({ content: `\`\`\`js\n${JSON.stringify(e)}\n\`\`\` Execution time: ${Date.now() - then}ms` })
-        .then(m => m.react("825893085267361813"));
+      const error = JSON.stringify(e);
+      console.log(String(e), error);
+      // Split the string into chunks of 2000 characters
+      const chunks = error.match(/.{1,1900}/g);
+      for(const chunk of chunks) {
+        await interaction.followUp({ content: `\`\`\`js\n${chunk}\n\`\`\`` });
+        if(chunks.indexOf(chunk) === chunks.length - 1) await interaction.followUp({ content: `Execution time: ${Date.now() - then}ms` })
+          .then(m => m.react("825893085267361813"));
+      }
     }
   }
 };
