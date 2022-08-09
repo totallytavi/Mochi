@@ -6,7 +6,7 @@ module.exports = {
   ephemeral: false,
   data: new SlashCommandBuilder()
     .setName("ship")
-    .setDescription("Ship yourself, yourself and a random user, or two users")
+    .setDescription("Ship two people or two random people in the server!")
     .addStringOption(option => {
       return option
         .setName("user")
@@ -26,32 +26,11 @@ module.exports = {
    */
   run: async (_client, interaction, options) => {
     // User handling
-    const member = options.getString("user");
-    const member2 = options.getString("user2");
-    let user1, user2, emoji;
+    let emoji;
     const cache = await interaction.guild.members.fetch().then(m => { return m.filter(m => !m.user.bot && m.user.id != interaction.user.id); });
-    const regex = /<@![0-9]+>/g;
     // If both are empty
-    if(isNull(member) && isNull(member2)) {
-      user1 = interaction.user.toString();
-      user2 = cache.random().toString();
-      // If member is a string or mention
-    } else if(regex.test(member) && !isNull(member)) {
-      user1 = member.match(regex)[0];
-      user2 = cache.random().toString();
-      // If member2 is a string or mention
-    } else if(regex.test(member2) && !isNull(member2)) {
-      user1 = cache.random().toString();
-      user2 = member2.match(regex)[0];
-      // If member is a string
-    } else if(!isNull(member) && isNull(member2)) {
-      user1 = member;
-      user2 = cache.random().toString();
-      // If member2 is a string
-    } else if(isNull(member) && !isNull(member2)) {
-      user1 = cache.random().toString();
-      user2 = member2;
-    }
+    const user1 = options.getString("user") ?? cache.random();
+    const user2 = options.getString("user2") ?? cache.random();
 
     // Emoji handling
     const min = 0;
@@ -89,7 +68,3 @@ module.exports = {
     })] });
   }
 };
-
-function isNull(obj) {
-  return obj === null;
-}

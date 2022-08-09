@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType } = require("discord.js");
+const { Client, Embed, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType } = require("discord.js");
 const config = require("./config.json");
 
 const errors = {
@@ -164,5 +164,98 @@ module.exports = {
     }
 
     return duration;
-  }
+  },
+
+  // -- //
+
+  pages: [
+    new Embed({
+      title: "Help | Page 1",
+      description: "This is the help panel. Use `help [command]` to get help for a specific command.",
+      fields: [
+        {
+          name: "/settings set",
+          value: "Here from that command? You might be looking for the proper values! Go to the GitHub page found here to see the proper values: [https://github.com/Coder-Tavi/Mochi/tree/v2.0.0#settings](https://github.com/Coder-Tavi/Mochi/tree/v2.0.0#settings)"
+        }
+      ],
+      footer: {
+        text: "Use `help [command]` to get help for a specific command."
+      }
+    }),
+    new Embed({
+      title: "Moderation Commands | Page 2",
+      description: "These commands are used to manage the server and members. Most commands require special permissions such as 'Kick Members,' 'Ban Members,' or other permissions",
+      fields: [
+        {
+          name: "ban",
+          value: "Bans a member from the server\nUsage: `/ban [@user] (reason) (days)`"
+        },
+        {
+          name: "kick",
+          value: "Kicks a member from the server\nUsage: `/kick [@user] (reason)`"
+        },
+        {
+          name: "mute",
+          value: "Uses Discord's timeout function to mute a member in the server\nUsage: `/mute [@user] [time] (reason)`"
+        },
+        {
+          name: "settings",
+          value: "Shows or configures the automatic verification system\nUsage: `/settings view` or `/settings set [option] [value]`"
+        },
+        {
+          name: "pardon",
+          value: "Removes a punishment (mute / kick / ban) from someone. You need to have the case ID for this which can be found using the `userinfo` command\nUsage: `/pardon [@user] [caseID] (reason)`"
+        },
+        {
+          name: "userinfo",
+          value: "Shows information about a user\nUsage: `/userinfo [@user] [show punishments?]`"
+        }
+      ],
+      footer: {
+        text: "Do not include [] or ()! -:- [] = Required | () = Optional"
+      }
+    }),
+    new Embed({
+      title: "Fun Commands | Page 3",
+      description: "These commands are just some fun ones to have around. You most likely don't need permissions to use them",
+      fields: [
+        {
+          name: "collar",
+          value: "Collars a member in the server\nUsage: `/collar [@user]`"
+        },
+        {
+          name: "ship",
+          value: "Calculates the love between whatever is provided!\nUsage: `/ship (user 1) (user 2)`"
+        },
+        {
+          name: "uncollar",
+          value: "Uncollars a member you own\nUsage: `/uncollar [@user]`"
+        }
+      ],
+      footer: {
+        text: "Do not include [] or ()! -:- [] = Required | () = Optional"
+      }
+    }),
+    new Embed({
+      title: "Utility Commands | Page 4",
+      description: "These commands are used for support reasons. You most likely won't use them",
+      fields: [
+        {
+          name: "debug",
+          value: "Shows the debug information for the bot\nUsage: `/debug`"
+        },
+        {
+          name: "eval",
+          value: "Evaluates a string of code (You must be a Discord team member to use this)\nUsage: `/eval [code]`"
+        },
+        {
+          name: "help",
+          value: "Shows the help panel\nUsage: `/help [command name]`"
+        }
+      ],
+      footer: {
+        text: "Do not include [] or ()! -:- [] = Required | () = Optional"
+      }
+    })
+  ]
 };

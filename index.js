@@ -1,8 +1,8 @@
-const { Client, Collection, IntentsBitField, InteractionType } = require("discord.js");
+const { Client, Collection, IntentsBitField, Partials, InteractionType } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { Sequelize } = require("sequelize");
 const { Routes } = require("discord-api-types/v9");
-const { interactionEmbed, toConsole } = require("./functions.js");
+const { interactionEmbed, toConsole, pages } = require("./functions.js");
 const config = require("./config.json");
 const rest = new REST({ version: 10 }).setToken(config.bot.token);
 const fs = require("fs");
@@ -36,7 +36,8 @@ if(!fs.existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent],
+  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMessageReactions],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
   sweepers: {
     "messages": {
       lifetime: 10,
@@ -225,7 +226,6 @@ client.on("messageCreate", async (message) => {
   const introChannels = JSON.parse(settings.channels_introduction);
   let intro = false;
   for(let i = 0; intro === false; i++) {
-    console.log(i);
     if(i > introChannels.length - 1) {
       reactions.each(r => r.remove());
       return message.reply({ content: `\`❌\` You need an introduction posted one of the following channels: <#${introChannels.join(">, <#")}>` })
@@ -302,6 +302,20 @@ client.on("messageCreate", async (message) => {
       }
     }, delay);
   }
+});
+
+client.on("messageReactionAdd", async (reaction, user) => {
+  const helpReactions = ["⏮️", "⏹️", "⏭️"];
+  if(!helpReactions.some(v => v === reaction.emoji.name)) return;
+  const message = await reaction.message.fetch();
+  if(!message.embeds[0].title.match(/.+Page [1-4]$/) || message.author.id !== client.user.id || user.bot) return;
+  let page = message.embeds[0].title.split("Page ")[1];
+  if(reaction.emoji.name === "⏮️") page = page - 2;
+  if(reaction.emoji.name === "⏹️") return await message.delete();
+  if(page > 3) page = 0;
+  if(page < 0) page = 3;
+  await reaction.users.remove(user);
+  await message.edit({ embeds: [pages[page]] });
 });
 //#endregion
 
