@@ -33,7 +33,7 @@ module.exports = {
       const result = await eval(options.getString("expression"));
       const str = JSON.stringify(result);
       // Split the string into chunks of 2000 characters
-      const chunks = str.match(/.{1,1900}/g);
+      const chunks = str.match(/.{1,1900}/gs);
       for(const chunk of chunks) {
         await interaction.followUp({ content: `\`\`\`js\n${chunk}\n\`\`\`` });
         if(chunks.indexOf(chunk) === chunks.length - 1) await interaction.followUp({ content: `Execution time: ${Date.now() - then}ms` })
@@ -42,7 +42,7 @@ module.exports = {
     } catch(e) {
       const error = `${String(e)}\n${e.stack}`;
       // Split the string into chunks of 2000 characters
-      const chunks = error.match(/.{1,1900}/g);
+      const chunks = error.match(/.{1,1900}/gs);
       for(const chunk of chunks) {
         await interaction.followUp({ content: `\`\`\`js\n${chunk}\n\`\`\`` });
         if(chunks.indexOf(chunk) === chunks.length - 1) await interaction.followUp({ content: `Execution time: ${Date.now() - then}ms` })
