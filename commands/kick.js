@@ -1,6 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver } = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, SlashCommandBuilder } = require("discord.js");
 const { interactionEmbed } = require("../functions.js");
 const config = require("../config.json");
 
@@ -42,8 +41,8 @@ module.exports = {
     if(!interaction.member.permissions.has("MANAGE_ROLES") && !interaction.member.roles.has(config.discord.devRole)) return interactionEmbed(3, "[ERR-UPRM]", "You do not have permission to warn members", interaction, client, [true, 10]);
     if(interaction.member.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-UPRM]", "You cannot kick someone equal to or higher than you on the role hierarchy", interaction, client, [true, 10]);
     // Bot permissions
-    if(!interaction.guild.me.permissions.has("KICK_MEMBERS")) return interactionEmbed(3, "[ERR-BPRM]", "I do not have permission to kick members", interaction, client, [true, 10]);
-    if(interaction.guild.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot kick someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
+    if(!interaction.guild.members.me.permissions.has("KICK_MEMBERS")) return interactionEmbed(3, "[ERR-BPRM]", "I do not have permission to kick members", interaction, client, [true, 10]);
+    if(interaction.guild.members.me.roles.highest.comparePositionTo(user.roles.highest) <= 0) return interactionEmbed(3, "[ERR-BPRM]", "I cannot kick someone equal to or higher than me on the role hierarchy", interaction, client, [true, 10]);
     //#endregion
 
     // Kick the user

@@ -1,6 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require("discord.js");
+const { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } = require("discord.js");
 const { toConsole } = require("../functions");
 
 module.exports = {
@@ -19,7 +18,7 @@ module.exports = {
     // Get the server settings
     const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
 
-    interaction.editReply({ content: "Information has been provided below! Please forward this to support if they do not see it", embeds: [new MessageEmbed({
+    interaction.editReply({ content: "Information has been provided below! Please forward this to support if they do not see it", embeds: [new Embed({
       title: "Debugging Information",
       description: "This information is provided for support purposes only and should not be shared with anyone else apart from support",
       fields: [
@@ -35,6 +34,6 @@ module.exports = {
       }
     }) ]});
 
-    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Guild Member Count: ${interaction.guild.memberCount} (Cache: ${interaction.guild.members.cache.size})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, "debug.js", client);
+    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Guild Member Count: ${interaction.guild.memberCount} (Cache: ${interaction.guild.members.cache.size})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, new Error().stack, client);
   }
 };

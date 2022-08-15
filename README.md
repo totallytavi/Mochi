@@ -6,8 +6,10 @@ A custom bot with code made public for anyone to peek in and see how it works
     - [Prerequites](#preresquites)
     - [Installation](#installation)
 2. [Commands](#commands)
+    - [Settings](#settings)
 3. [License](#license)
 4. [Credits](#credits)
+5. [Support](#support)
 
 ## Installing ##
 ### Preresquites ###
@@ -59,6 +61,56 @@ To validate your code against the ESLint configuration, please use the following
 
 ## Commands ##
 Since this bot operates on Discord's slash commands, all commands can be viewed by typing `/` into the Discord chat bar. You will see a list of commands appear for the different bots. Scroll until you see the bot's. All available commands will be listed there.
+### Settings ###
+In this command, you may notice that the command asks you for an option and value. This is due to the fact that creating a subcommand for each option is a little ineffective and wouldn't work out great for the bot and you. Therefore, I have used options instead. Here's what each option does and what the value should be.
+
+
+**Automatic Verification**
+```
+- 1/0
+- true/false
+```
+**Verification Password**
+```
+- Any form of text!
+```
+**Welcome Message**
+```
+- Any form of text! Replacements are listed below this section
+```
+**Verification Channel**
+```
+- A channel ID (123456789012345678) or mention (#example)
+```
+**Introduction Channel**
+```
+- A list of channel IDs or mentions (See above for what is expected)
+```
+**Roles Needed**
+```
+- Any number between 1 and 249
+```
+**Add Roles**
+```
+- A role ID (123456789012345678) or mention (@example)
+```
+**Remove Roles**
+```
+- A role ID (123456789012345678) or mention (@example)
+```
+**Replacements**
+```
+{{user}} - Mentions the user
+{{user.tag}} - Username
+{{user.id}} - User ID
+{{guild}} - Server name
+{{guild.id}} - Server ID
+{{guild.count}} - Server member count
+{{guild.owner}} - Mentions the server owner
+{{guild.ownerNick}} - Server owner nickname
+{{guild.ownerUser}} - Server owner username
+{{guild.ownerID}} - Server owner ID
+```
 
 ## License ##
 Coder-Tavi/Mochi is licensed under the GNU General Public License v3.0. You can find more details about the license and where to find it in the file titled "LICENSE" in the primary directory.
@@ -66,3 +118,6 @@ Coder-Tavi/Mochi is licensed under the GNU General Public License v3.0. You can 
 ## Credits ##
 This bot was made possible thanks to the following people:
 - [Tavi](https://github.com/Coder-Tavi) - Developer
+
+## Support ##
+Need help? Have a question or concern? You can contact the developer via Discord! Use this link: [https://discord.gg/gjcpmGtryU](https://discord.gg/gjcpmGtryU)
