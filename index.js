@@ -224,7 +224,7 @@ client.on("messageCreate", async (message) => {
     return message.reply({ content: "`❌` The bot is not configured to have an intro channel" })
       .then(m => remove(5000, m, message));
   }
-  const introChannels = JSON.parse(settings.channels_introduction);
+  const introChannels = settings.channels_introduction.split(",");
   let intro = false;
   for(let i = 0; intro === false; i++) {
     if(i > introChannels.length - 1) {

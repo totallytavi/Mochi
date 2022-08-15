@@ -104,7 +104,7 @@ module.exports = {
         title: "Settings",
         description: `Settings for \`${interaction.guild.name}\``,
         fields: [
-          { name: "Auto Verify", value: settings.verification_toggle === true ? "Enabled" : "Disabled", inline: true },
+          { name: "Auto Verify", value: !settings.verification_toggle ? "Disabled" : "Enabled", inline: true },
           { name: "Password", value: settings.verification_password === " " ? "(None set)" : `||${settings.verification_password}||`, inline: true },
           { name: "Verification Channel", value: settings.channels_verification === " " ? "(No channel)" : `<#${settings.channels_verification}>`, inline: true },
           { name: "Welcome Channel", value: settings.channels_welcome === " " ? "(No channel)" : `<#${settings.channels_welcome}>`, inline: true },
@@ -216,7 +216,7 @@ module.exports = {
         }
         try {
           client.models.Setting.update({
-            channels_introduction: JSON.stringify(channels)
+            channels_introduction: channels.join(",")
           }, {
             where: {
               guildId: interaction.guild.id
@@ -280,7 +280,7 @@ module.exports = {
             return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID or mention", interaction, client, [true, 15]); 
           if(!interaction.guild.roles.cache.has(value[i]))
             return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID", interaction, client, [true, 15]);
-          if(Array.from(settings.roles_remove).includes(value[i]))
+          if(settings.roles_remove.split(",").includes(value[i]))
             return interactionEmbed(3, "[ERR-ARGS]", "You cannot add a role that is already in the remove list", interaction, client, [true, 15]);
         }
         try {
@@ -310,7 +310,7 @@ module.exports = {
             return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID or mention", interaction, client, [true, 15]); 
           if(!interaction.guild.roles.cache.has(value[i]))
             return interactionEmbed(3, "[ERR-ARGS]", "You must enter a valid role ID", interaction, client, [true, 15]);
-          if(Array.from(settings.roles_add).includes(value[i]))
+          if(settings.roles_add.split(",").includes(value[i]))
             return interactionEmbed(3, "[ERR-ARGS]", "You cannot add a role that is already in the add list", interaction, client, [true, 15]);
         }
         try {
