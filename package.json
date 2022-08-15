@@ -1,14 +1,14 @@
 {
   "dependencies": {
-    "@discordjs/rest": "^1.0.1",
-    "ascii-table": "^0.0.9",
-    "discord-api-types": "^0.37.2",
-    "discord.js": "^14.2.0",
-    "fs": "^0.0.2",
-    "moment": "^2.29.4",
-    "mysql2": "^2.3.3",
-    "sequelize": "^6.21.3",
-    "util": "^0.12.4"
+    "@discordjs/rest": "1.0.1",
+    "ascii-table": "0.0.9",
+    "discord-api-types": "0.37.2",
+    "discord.js": "14.2.0",
+    "fs": "0.0.2",
+    "moment": "2.29.4",
+    "mysql2": "2.3.3",
+    "sequelize": "6.21.3",
+    "util": "0.12.4"
   },
   "devDependencies": {
     "eslint": "8.22.0"
