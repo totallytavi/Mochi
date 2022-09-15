@@ -4,7 +4,7 @@ const { Sequelize } = require("sequelize");
 const { Routes } = require("discord-api-types/v9");
 const { interactionEmbed, toConsole, pages } = require("./functions.js");
 const config = require("./config.json");
-const rest = new REST({ version: 10 }).setToken(config.bot.token);
+const rest = new REST({ version: 10 }).setToken(process.env.token);
 const fs = require("fs");
 const wait = require("util").promisify(setTimeout);
 let ready = false;
@@ -12,7 +12,8 @@ const settingCache = new Map();
 
 //#region Setup
 // Database
-const sequelize = new Sequelize(config.mysql.database, config.mysql.user, config.mysql.password, {
+const sequelize = new Sequelize(process.env.DBname, process.env.DBuser, process.env.DBpassword, {
+  host: process.env.DBhost,
   dialect: "mysql",
   logging: process.env.environment === "development" ? console.log : false,
 });
@@ -320,7 +321,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
 });
 //#endregion
 
-client.login(config.bot.token);
+client.login(process.env.token);
 
 //#region Error handling
 process.on("uncaughtException", (err, origin) => {
