@@ -12,5 +12,23 @@
   },
   "devDependencies": {
     "eslint": "8.23.1"
-  }
+  },
+  "name": "mochi",
+  "description": "A custom bot with code made public for anyone to peek in and see how it works",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Coder-Tavi/Mochi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GNU",
+  "bugs": {
+    "url": "https://github.com/Coder-Tavi/Mochi/issues"
+  },
+  "homepage": "https://github.com/Coder-Tavi/Mochi#readme"
 }
