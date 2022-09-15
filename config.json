@@ -1,0 +1,12 @@
+{
+  "bot": {
+    "applicationId": "757039684751851540",
+    "guildId": "952997842455257108"
+  },
+  "discord": {
+    "devRole": "",
+    "devChannel": "958797413487882281",
+    "logChannel": "958797825695686716",
+    "suppressChannel": "969660337752244274"
+  }
+}

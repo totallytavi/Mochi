@@ -1,0 +1,12 @@
+{
+  "bot": {
+    "applicationId": "",
+    "guildId": ""
+  },
+  "discord": {
+    "devRole": "",
+    "devChannel": "",
+    "logChannel": "",
+    "suppressChannel": ""
+  }
+}
