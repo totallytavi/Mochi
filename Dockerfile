@@ -1,5 +1,5 @@
 # get node
-FROM node:current-buster-slim
+FROM node:current-alpine
 
 # Create app directory
 WORKDIR /usr/src/app
