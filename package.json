@@ -8,7 +8,7 @@
     "moment": "2.29.4",
     "mysql2": "2.3.3",
     "sequelize": "6.25.3",
-    "util": "0.12.4"
+    "util": "0.12.5"
   },
   "devDependencies": {
     "eslint": "8.25.0"
