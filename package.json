@@ -5,7 +5,7 @@
     "discord-api-types": "0.37.35",
     "discord.js": "14.11.0",
     "fs": "0.0.2",
-    "moment": "2.29.4",
+    "moment": "2.30.1",
     "mysql2": "3.9.7",
     "sequelize": "6.32.1",
     "util": "0.12.5"
