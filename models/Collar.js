@@ -3,15 +3,15 @@ const { DataTypes, Sequelize } = require("sequelize");
 module.exports.import = (sequelize) => {
   sequelize.define("Collar", {
     collared: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT(21),
       allowNull: false
     },
     owner: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT(21),
       allowNull: false
     },
     guild: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT(21),
       allowNull: false
     },
     collaredAt: {
