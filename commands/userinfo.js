@@ -55,13 +55,14 @@ module.exports = {
     const globalCollar = collarToString('Globally', collars.filter((c) => c.guild === "0")[0]);
     const serverCollar = collarToString('In This Server', collars.filter((c) => c.guild === interaction.guild.id)[0]);
 
-    const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } }).reduce((prev, curr) => {
-      // Remove duplicates
-      if (!prev.some((c) => c.collared === curr.collared)) {
-        prev.push(curr);
-      }
-      return prev;
-    }, []);
+    const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } })
+      .then((collars) => collars.reduce((prev, curr) => {
+        // Remove duplicates
+        if (!prev.some((c) => c.collared === curr.collared)) {
+          prev.push(curr);
+        }
+        return prev;
+      }, []));
     let owned;
     if(pets.length > 0) {
       owned = pets.map(c => `<@${c.collared}>`).join(", ");
