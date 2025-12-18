@@ -1,22 +1,23 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, Sequelize } = require("sequelize");
 
 module.exports.import = (sequelize) => {
   sequelize.define("Collar", {
     collared: {
       type: DataTypes.STRING,
-      primaryKey: true,
+      allowNull: false
     },
     owner: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false
     },
     guild: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false
     },
     collaredAt: {
       type: DataTypes.DATE,
-      allowNull: true,
+      allowNull: false,
+      defaultValue: Sequelize.fn('now')
     },
   });
 };
