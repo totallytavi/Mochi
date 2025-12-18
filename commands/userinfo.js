@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 const { Client, CommandInteraction, CommandInteractionOptionResolver, EmbedBuilder, SlashCommandBuilder } = require("discord.js");
+const { Op } = require("sequelize");
 const { interactionEmbed } = require("../functions.js");
 const moment = require("moment");
 const config = require("../config.json");
@@ -50,7 +51,7 @@ module.exports = {
     });
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
 
-    const collars = await client.models.Collar.findAll({ where: { collared: member.user.id, guildId: { in: [interaction.guild.id, "0"] } } });
+    const collars = await client.models.Collar.findAll({ where: { collared: member.user.id, guildId: { [Op.or]: [interaction.guild.id, "0"] } } });
     const globalCollar = collarToString(collars.filter((c) => c.guildId === "0")[0], 'Globally');
     const serverCollar = collarToString(collars.filter((c) => c.guildId === interaction.guild.id)[0], 'In This Server');
 
