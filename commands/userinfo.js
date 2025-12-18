@@ -57,7 +57,7 @@ module.exports = {
 
     const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } });
     let owned;
-    if(owned.length > 0) {
+    if(pets.length > 0) {
       owned = pets.map(c => `<@${c.collared}>`).join(", ");
     } else {
       owned = "No pets!";
