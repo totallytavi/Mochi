@@ -52,8 +52,8 @@ module.exports = {
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
 
     const collars = await client.models.Collar.findAll({ where: { collared: member.user.id, guild: { [Op.or]: [interaction.guild.id, "0"] } } });
-    const globalCollar = collarToString(collars.filter((c) => c.guildId === "0")[0], 'Globally');
-    const serverCollar = collarToString(collars.filter((c) => c.guildId === interaction.guild.id)[0], 'In This Server');
+    const globalCollar = collarToString(collars.filter((c) => c.guild === "0")[0], 'Globally');
+    const serverCollar = collarToString(collars.filter((c) => c.guild === interaction.guild.id)[0], 'In This Server');
 
     const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } });
     let owned;
