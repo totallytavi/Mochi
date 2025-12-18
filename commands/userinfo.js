@@ -5,7 +5,7 @@ const { interactionEmbed } = require("../functions.js");
 const moment = require("moment");
 const config = require("../config.json");
 
-function collarToString(collar, kind) {
+function collarToString(kind, collar) {
   if (!collar) {
     return `**${kind}**: This user is uncollared!`
   }
@@ -13,7 +13,7 @@ function collarToString(collar, kind) {
   return [
     `**${kind}**:`,
     "<:PinkCollar:968663386881687572>",
-    `Owned by <@${collar.owner}>`
+    `Owned by <@${collar.owner}>`,
     `since <t:${Math.floor(new Date(collar.collaredAt).getTime()/1000.0)}>`
   ].join(' ')
 }
@@ -52,8 +52,8 @@ module.exports = {
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
 
     const collars = await client.models.Collar.findAll({ where: { collared: member.user.id, guild: { [Op.or]: [interaction.guild.id, "0"] } } });
-    const globalCollar = collarToString(collars.filter((c) => c.guild === "0")[0], 'Globally');
-    const serverCollar = collarToString(collars.filter((c) => c.guild === interaction.guild.id)[0], 'In This Server');
+    const globalCollar = collarToString('Globally', collars.filter((c) => c.guild === "0")[0]);
+    const serverCollar = collarToString('In This Server', collars.filter((c) => c.guild === interaction.guild.id)[0]);
 
     const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } });
     let owned;
