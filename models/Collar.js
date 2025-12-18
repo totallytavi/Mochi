@@ -6,7 +6,7 @@ module.exports.import = (sequelize) => {
       type: DataTypes.UUID,
       allowNull: false,
       primaryKey: true,
-      defaultvalue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4
     },
     collared: {
       type: DataTypes.TEXT,
