@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, Embed, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType } = require("discord.js");
+const { Client, Embed, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType, ButtonInteraction } = require("discord.js");
 const config = require("./config.json");
 
 const errors = {
@@ -126,8 +126,17 @@ module.exports = {
     content = content ?? "Please select an option";
     
     // Create a filter
+    /** @type {(i: ButtonInteraction) => boolean} */
     const filter = i => {
-      return i.user.id === interaction.user.id;
+      if (i.user.id === interaction.user.id) {
+        return true;
+      }
+
+      i.editReply('That is not your decision to make!');
+      setTimeout(() => {
+        i.deleteReply();
+      }, 5000);
+      return false;
     };
     // Convert the time to milliseconds
     time *= 1000;

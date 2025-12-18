@@ -4,6 +4,19 @@ const { interactionEmbed } = require("../functions.js");
 const moment = require("moment");
 const config = require("../config.json");
 
+function collarToString(collar, kind) {
+  if (!collar) {
+    return `**${kind}**: This user is uncollared!`
+  }
+
+  return [
+    `**${kind}**:`,
+    "<:PinkCollar:968663386881687572>",
+    `Owned by <@${collar.owner}>`
+    `since <t:${Math.floor(new Date(collar.collaredAt).getTime()/1000.0)}>`
+  ].join(' ')
+}
+
 module.exports = {
   name: "userinfo",
   ephemeral: false,
@@ -36,15 +49,23 @@ module.exports = {
       color: Math.floor(Math.random() * 16777215)
     });
     const roles = member.roles.cache.sort((a, b) => b.position - a.position).filter(r => r != member.guild.roles.everyone);
-    const collar = await client.models.Collar.findOne({ where: { collared: member.user.id } });
-    let owned = await client.models.Collar.findAll({ where: { owner: member.user.id } });
+
+    const collars = await client.models.Collar.findAll({ where: { collared: member.user.id, guildId: { in: [interaction.guild.id, "0"] } } });
+    const globalCollar = collarToString(collars.filter((c) => c.guildId === "0")[0], 'Globally');
+    const serverCollar = collarToString(collars.filter((c) => c.guildId === interaction.guild.id)[0], 'In This Server');
+
+    const pets = await client.models.Collar.findAll({ where: { owner: member.user.id } });
+    let owned;
     if(owned.length > 0) {
-      owned = owned.map(c => `<@${c.collared}>`).join(", ");
+      owned = pets.map(c => `<@${c.collared}>`).join(", ");
     } else {
       owned = "No pets!";
     }
+    if (owned.length > 1024) {
+      owned = `Owns a ${pets.length} pets! (*So many, it can't be shown here :o*)`
+    }
     embed.setTitle(`Information on ${member.user.tag}`);
-    embed.setDescription(collar === null ? "This user is uncollared!" : `<:PinkCollar:968663386881687572> Owned by <@${collar.owner}> since <t:${Math.floor(new Date(collar.collaredAt).getTime()/1000.0)}>`);
+    embed.setDescription(globalCollar + '\n' + serverCollar);
     embed.setFooter({ text: `ID: ${member.user.id}` });
     embed.setThumbnail(member.user.displayAvatarURL({ format: "png", size: 2048, dynamic: true }));
     embed.addFields([

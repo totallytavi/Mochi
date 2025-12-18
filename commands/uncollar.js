@@ -13,6 +13,12 @@ module.exports = {
         .setName("user")
         .setDescription("The user to remove the collar from")
         .setRequired(true);
+    })
+    .addBooleanOption(option => {
+      return option
+        .setName("all_servers")
+        .setDescription("Target the user-level collar?")
+        .setRequired(false)
     }),
   /**
    * @param {Client} client
@@ -20,14 +26,14 @@ module.exports = {
    * @param {CommandInteractionOptionResolver} options
    */
   run: async (client, interaction, options) => {
-    let error = false;
+    const guildId = options.getBoolean("all_servers") ? "0" : interaction.guild.id;
 
     // Check the user exists on the server
     const discMember = options.getMember("user");
     if(!discMember) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
 
     // Make sure the user is not already collared with that user
-    const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id } });
+    const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id, guildId } });
     if(check === null) return interactionEmbed(3, "[ERR-ARGS]", "That user isn't collared by anyone", interaction, client, [true, 10]);
     if(check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar yourself or those you've collared", interaction, client, [true, 10]);
 
