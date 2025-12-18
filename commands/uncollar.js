@@ -26,6 +26,7 @@ module.exports = {
    * @param {CommandInteractionOptionResolver} options
    */
   run: async (client, interaction, options) => {
+    let error = false;
     const guildId = options.getBoolean("all_servers") ? "0" : interaction.guild.id;
 
     // Check the user exists on the server
