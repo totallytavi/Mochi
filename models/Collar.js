@@ -2,6 +2,12 @@ const { DataTypes, Sequelize } = require("sequelize");
 
 module.exports.import = (sequelize) => {
   sequelize.define("Collar", {
+    collarId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      primaryKey: true,
+      defaultvalue: DataTypes.UUIDV4
+    },
     collared: {
       type: DataTypes.TEXT,
       allowNull: false
