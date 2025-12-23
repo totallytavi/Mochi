@@ -1,6 +1,6 @@
-const { DataTypes, Sequelize } = require("sequelize");
+import { DataTypes, Sequelize } from "sequelize";
 
-module.exports.import = (sequelize) => {
+const _import = (sequelize) => {
   sequelize.define("Collar", {
     collarId: {
       type: DataTypes.UUID,
@@ -27,3 +27,4 @@ module.exports.import = (sequelize) => {
     },
   });
 };
+export { _import as import };

@@ -1,24 +1,18 @@
 // eslint-disable-next-line no-unused-vars
-const { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } = require("discord.js");
-const { toConsole } = require("../functions");
+import { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } from "discord.js";
+import { toConsole } from "../functions";
 
-module.exports = {
-  name: "debug",
-  ephemeral: false,
-  data: new SlashCommandBuilder()
-    .setName("debug")
-    .setDescription("Shows information about the bot for support purposes"),
-  /**
-   * @param {Client} client
-   * @param {CommandInteraction} interaction
-   * @param {CommandInteractionOptionResolver} options
-   */
-  // eslint-disable-next-line no-unused-vars
-  run: async (client, interaction, _options) => {
-    // Get the server settings
-    const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
+export const name = "debug";
+export const ephemeral = false;
+export const data = new SlashCommandBuilder()
+  .setName("debug")
+  .setDescription("Shows information about the bot for support purposes");
+export async function run(client, interaction, _options) {
+  // Get the server settings
+  const settings = await client.models.Setting.findOne({ where: { guildId: interaction.guild.id } });
 
-    interaction.editReply({ content: "Information has been provided below! Please forward this to support if they do not see it", embeds: [new Embed({
+  interaction.editReply({
+    content: "Information has been provided below! Please forward this to support if they do not see it", embeds: [new Embed({
       title: "Debugging Information",
       description: "This information is provided for support purposes only and should not be shared with anyone else apart from support",
       fields: [
@@ -32,8 +26,8 @@ module.exports = {
       footer: {
         text: `${interaction.guild.memberCount} members :=: ${interaction.guild.members.cache.size} cached`
       }
-    }) ]});
+    })]
+  });
 
-    return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Guild Member Count: ${interaction.guild.memberCount} (Cache: ${interaction.guild.members.cache.size})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, new Error().stack, client);
-  }
-};
+  return toConsole(`Debugging information has been provided for ${interaction.guild.name} (${interaction.guild.id})\n> Guild ID: ${interaction.guild.id}\n> Guild Name: ${interaction.guild.name}\n> Guild Owner: ${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.tag} (${(await interaction.guild.members.fetch(interaction.guild.ownerId)).user.id})\n> Guild Member Count: ${interaction.guild.memberCount} (Cache: ${interaction.guild.members.cache.size})\n> Executor Permissions: ${interaction.memberPermissions.bitfield.toString()}\n> Settings in Database?: ${settings.introChannel === " " ? "No" : "Yes"}`, new Error().stack, client);
+}

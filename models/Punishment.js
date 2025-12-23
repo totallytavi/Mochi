@@ -1,6 +1,6 @@
-const { DataTypes } = require("sequelize");
+import { DataTypes } from "sequelize";
 
-module.exports.import = (sequelize) => sequelize.define("Punishment", {
+const _import = (sequelize) => sequelize.define("Punishment", {
   caseId: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -45,3 +45,4 @@ module.exports.import = (sequelize) => sequelize.define("Punishment", {
     allowNull: true
   }
 });
+export { _import as import };

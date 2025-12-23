@@ -1,31 +1,31 @@
-const { Client, Collection, IntentsBitField, Partials, InteractionType } = require("discord.js");
-const { REST } = require("@discordjs/rest");
-const { Sequelize } = require("sequelize");
-const { Routes } = require("discord-api-types/v9");
-const { interactionEmbed, toConsole, pages } = require("./functions.js");
-const config = require("./config.json");
-const rest = new REST({ version: 10 }).setToken(config.bot.token);
-const fs = require("fs");
-const wait = require("util").promisify(setTimeout);
+import { Client, Collection, IntentsBitField, Partials, InteractionType } from "discord.js";
+import { REST } from "@discordjs/rest";
+import { Sequelize } from "sequelize";
+import { Routes } from "discord-api-types/v9";
+import { interactionEmbed, toConsole, pages } from "./functions.js";
+import { bot, mysql, discord } from "./config.json";
+const rest = new REST({ version: 10 }).setToken(bot.token);
+import { existsSync, readdirSync, writeFileSync } from "fs";
+const wait = await import("util").then((util) => util.promisify(setTimeout));
 let ready = false;
 const settingCache = new Map();
 
 //#region Setup
 // Database
-const sequelize = new Sequelize(config.mysql.database, config.mysql.user, config.mysql.password, {
-  host: config.mysql.host,
+const sequelize = new Sequelize(mysql.database, mysql.user, mysql.password, {
+  host: mysql.host,
   dialect: "mysql",
   logging: process.env.environment === "development" ? console.info : false,
 });
-if(!fs.existsSync("./models")) {
+if(!existsSync("./models")) {
   console.warn("[DB] No models detected");
 } else {
   console.info("[DB] Models detected");
-  const models = fs.readdirSync("models").filter(file => file.endsWith(".js"));
+  const models = readdirSync("models").filter(file => file.endsWith(".js"));
   console.info(`[DB] Expecting ${models.length} models`);
   for(const model of models) {
     try {
-      const file = require(`./models/${model}`);
+      const file = await import(`./models/${model}`);
       file.import(sequelize);
       console.info(`[DB] Loaded ${model}`);
     } catch(e) {
@@ -52,14 +52,14 @@ client.sequelize = sequelize;
 client.models = sequelize.models;
 
 (async () => {
-  if(!fs.existsSync("./commands")) return console.info("[FILE-LOAD] No 'commands' folder found, skipping command loading");
-  const commands = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
+  if(!existsSync("./commands")) return console.info("[FILE-LOAD] No 'commands' folder found, skipping command loading");
+  const commands = readdirSync("./commands").filter(file => file.endsWith(".js"));
   console.info(`[FILE-LOAD] Loading files, expecting ${commands.length} files`);
 
   for(let file of commands) {
     try {
       console.info(`[FILE-LOAD] Loading file ${file}`);
-      let command = require(`./commands/${file}`);
+      let command = await import(`./commands/${file}`);
 
       if(command.name) {
         console.info(`[FILE-LOAD] Loaded: ${file}`);
@@ -82,12 +82,12 @@ client.models = sequelize.models;
     // Refresh based on environment
     if(process.env.environment === "development") {
       await rest.put(
-        Routes.applicationGuildCommands(config.bot.applicationId, config.bot.guildId),
+        Routes.applicationGuildCommands(bot.applicationId, bot.guildId),
         { body: slashCommands }
       );
     } else {
       await rest.put(
-        Routes.applicationCommands(config.bot.applicationId),
+        Routes.applicationCommands(bot.applicationId),
         { body: slashCommands }
       );
     }
@@ -321,7 +321,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
 });
 //#endregion
 
-client.login(config.bot.token);
+client.login(bot.token);
 
 //#region Error handling
 const recentErrors = [];
@@ -345,7 +345,7 @@ process.on("unhandledRejection", async (promise) => {
   if(recentErrors.length === 3
       && (recentErrors[0].promise === recentErrors[1].promise && recentErrors[1].promise === recentErrors[2].promise)
       && recentErrors[0].time.getTime() - recentErrors[2].time.getTime() < 1e4) {
-    fs.writeFileSync("./latest-error.log", JSON.stringify({code: 15, info: {source: "Anti spam triggered! Three errors with the same content have occurred recently", promise}, time: new Date().toString()}, null, 2));
+    writeFileSync("./latest-error.log", JSON.stringify({code: 15, info: {source: "Anti spam triggered! Three errors with the same content have occurred recently", promise}, time: new Date().toString()}, null, 2));
     return process.exit(17);
   }
   
@@ -354,7 +354,7 @@ process.on("unhandledRejection", async (promise) => {
     console.error(promise);
     return process.exit(15);
   }
-  const suppressChannel = await client.channels.fetch(config.discord.suppressChannel).catch(() => { return undefined; });
+  const suppressChannel = await client.channels.fetch(discord.suppressChannel).catch(() => { return undefined; });
   if(!suppressChannel) return console.error(`An [unhandledRejection] has occurred.\n\n> ${promise}`);
   if(String(promise).includes("Interaction has already been acknowledged.") || String(promise).includes("Unknown interaction") || String(promise).includes("Unknown Message") || String(promise).includes("rCannot read properties of undefined (reading 'ephemeral')")) return suppressChannel.send(`A suppressed error has occured at process.on(unhandledRejection):\n>>> ${promise}`);
   toConsole(`An [unhandledRejection] has occurred.\n\n> ${promise}`, new Error().stack, client);

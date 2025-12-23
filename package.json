@@ -30,5 +30,6 @@
   "bugs": {
     "url": "https://github.com/Coder-Tavi/Mochi/issues"
   },
-  "homepage": "https://github.com/Coder-Tavi/Mochi#readme"
+  "homepage": "https://github.com/Coder-Tavi/Mochi#readme",
+  "type": "module"
 }

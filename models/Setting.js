@@ -1,6 +1,6 @@
-const { DataTypes } = require("sequelize");
+import { DataTypes } from "sequelize";
 
-module.exports.import = (sequelize) => sequelize.define("Setting", {
+const _import = (sequelize) => sequelize.define("Setting", {
   guildId: {
     type: DataTypes.STRING,
     primaryKey: true
@@ -42,3 +42,4 @@ module.exports.import = (sequelize) => sequelize.define("Setting", {
     allowNull: false
   },
 });
+export { _import as import };
