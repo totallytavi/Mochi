@@ -1,11 +1,9 @@
-import { Client, Collection, IntentsBitField, Partials, InteractionType } from "discord.js";
-import { REST } from "@discordjs/rest";
-import { Sequelize } from "sequelize";
-import { Routes } from "discord-api-types/v9";
-import { interactionEmbed, toConsole, pages } from "./functions.js";
-import { bot, mysql, discord } from "./config.json";
-const rest = new REST({ version: 10 }).setToken(bot.token);
+import { Client, Collection, IntentsBitField, InteractionType, Partials } from "discord.js";
 import { existsSync, readdirSync, writeFileSync } from "fs";
+import { Sequelize } from "sequelize";
+import { default as _config } from "./config.json" with { "type": "json" };
+const { bot, discord, mysql } = _config;
+import { interactionEmbed, pages, toConsole } from "./functions.js";
 const wait = await import("util").then((util) => util.promisify(setTimeout));
 let ready = false;
 const settingCache = new Map();
@@ -14,8 +12,9 @@ const settingCache = new Map();
 // Database
 const sequelize = new Sequelize(mysql.database, mysql.user, mysql.password, {
   host: mysql.host,
+  port: mysql.port,
+  logging: process.env.NODE_ENV === "development" ? console.info : false,
   dialect: "mysql",
-  logging: process.env.environment === "development" ? console.info : false,
 });
 if(!existsSync("./models")) {
   console.warn("[DB] No models detected");
@@ -37,7 +36,7 @@ if(!existsSync("./models")) {
 
 // Discord bot
 const client = new Client({
-  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildBans, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMessageReactions],
+  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildModeration, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMessageReactions],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
   sweepers: {
     "messages": {
@@ -73,41 +72,36 @@ client.models = sequelize.models;
   }
 
   console.info("[FILE-LOAD] All files loaded into ASCII and ready to be sent");
-  await wait(500); // Artificial wait to prevent instant sending
+})();
+//#endregion
+
+//#region Events
+client.on("clientReady", async () => {
+  console.info("[READY] Client is ready");
+  console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
+  toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, new Error().stack, client);
+
   const now = Date.now();
 
   try {
     console.info("[APP-CMD] Started refreshing application (/) commands.");
 
     // Refresh based on environment
-    if(process.env.environment === "development") {
-      await rest.put(
-        Routes.applicationGuildCommands(bot.applicationId, bot.guildId),
-        { body: slashCommands }
-      );
+    const devGuild = await client.guilds.fetch(bot.guildId);
+    if (!devGuild) {
+      console.warn('[APP-CMD] Could not find the configured developer server');
     } else {
-      await rest.put(
-        Routes.applicationCommands(bot.applicationId),
-        { body: slashCommands }
-      );
+      devGuild.commands.set(process.env.NODE_ENV === 'development' ? slashCommands : []);
+      console.info("[APP-CMD] Successfully reloaded guild (/) commands.");
     }
     
     const then = Date.now();
-    console.info(`[APP-CMD] Successfully reloaded application (/) commands after ${then - now}ms.`);
+    console.info(`[APP-CMD] Successfully reloaded global application (/) commands after ${then - now}ms.`);
   } catch(error) {
     console.error("[APP-CMD] An error has occurred while attempting to refresh application commands.");
     console.error(`[APP-CMD] ${error}`);
   }
-  console.info("[FILE-LOAD] All files loaded successfully");
-  ready = true;
-})();
-//#endregion
 
-//#region Events
-client.on("ready", async () => {
-  console.info("[READY] Client is ready");
-  console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
-  toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, new Error().stack, client);
   // Set the status to new Date();
   client.guilds.cache.each(g => g.members.fetch());
   client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
@@ -127,6 +121,8 @@ client.on("ready", async () => {
     client.guilds.cache.each(g => g.members.fetch());
     client.user.setActivity(`${client.users.cache.size} users across ${client.guilds.cache.size} servers`, { type: "LISTENING" });
   }, 30_000);
+
+  ready = true;
 });
 
 client.on("interactionCreate", async (interaction) => {

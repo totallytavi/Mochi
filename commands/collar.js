@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import { Client, CommandInteraction, CommandInteractionOptionResolver, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import { interactionEmbed } from "../functions.js";
 
 export const name = "collar";

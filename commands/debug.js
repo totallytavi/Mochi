@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import { Client, CommandInteraction, CommandInteractionOptionResolver, Embed, SlashCommandBuilder } from "discord.js";
+import { Embed, SlashCommandBuilder } from "discord.js";
 import { toConsole } from "../functions";
 
 export const name = "debug";

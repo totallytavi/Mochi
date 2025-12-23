@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
-import { Client, CommandInteraction, CommandInteractionOptionResolver, ButtonBuilder, SlashCommandBuilder } from "discord.js";
-import { interactionEmbed, awaitButtons } from "../functions.js";
+import { ButtonBuilder, SlashCommandBuilder } from "discord.js";
+import { awaitButtons, interactionEmbed } from "../functions.js";
 
 export const name = "uncollar";
 export const ephemeral = false;

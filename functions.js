@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-unused-vars
-import { Client, Embed, EmbedBuilder, Interaction, ButtonBuilder, ActionRowBuilder, ComponentType, ButtonInteraction } from "discord.js";
-import { discord } from "./config.json";
+import { ActionRowBuilder, ButtonInteraction, ComponentType, Embed, EmbedBuilder } from "discord.js";
+import { default as _config } from "./config.json" with { "type": "json" };
+const { discord } = _config;
 
 const errors = {
   "[SQL-ERR]": "An error has occurred while trying to execute a MySQL query",

@@ -1,9 +1,10 @@
 // eslint-disable-next-line no-unused-vars
-import { Client, CommandInteraction, CommandInteractionOptionResolver, EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { Op } from "sequelize";
-import { interactionEmbed } from "../functions.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import moment from "moment";
-import { discord } from "../config.json";
+import { Op } from "sequelize";
+import { default as _config } from "../config.json" with { "type": "json" };
+const { discord } = _config;
+import { interactionEmbed } from "../functions.js";
 const timeout = await import("node:util").then((u) => u.promisify(setTimeout));
 
 function collarToString(kind, collar) {
