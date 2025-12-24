@@ -23,12 +23,12 @@ export async function run(client, interaction, options) {
   let error = false;
   const guildId = options.getBoolean("all_servers") ? "0" : interaction.guild.id;
 
-  // Check the user exists on the server
-  const discMember = options.getMember("user");
-  if (!discMember) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
+  // Unlike collar, you can uncollar anyone. Collar requires server sharing for user safety reasons
+  const discMember = options.getUser("user");
+  if (!discMember) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist (Try using a user ID?)", interaction, client, [true, 10]);
 
   // Make sure the user is not already collared with that user
-  const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id, guild: guildId } });
+  const check = await client.models.Collar.findOne({ where: { collared: discMember.id, guild: guildId } });
   if (check === null) return interactionEmbed(3, "[ERR-ARGS]", "That user isn't collared by anyone", interaction, client, [true, 10]);
   if (check.owner !== interaction.user.id && check.collared !== interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You can only uncollar yourself or those you've collared", interaction, client, [true, 10]);
 

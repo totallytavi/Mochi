@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import { SlashCommandBuilder, Team } from "discord.js";
-import { interactionEmbed } from "../functions";
+import { interactionEmbed } from "../functions.js";
 const timeout = await import("node:util").then((u) => u.promisify(setTimeout));
 
 export const name = "eval";

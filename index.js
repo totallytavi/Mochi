@@ -1,9 +1,9 @@
-import { Client, Collection, IntentsBitField, InteractionType, Partials } from "discord.js";
+import { Client, Collection, IntentsBitField, InteractionType, Partials, SlashCommandBuilder } from "discord.js";
 import { existsSync, readdirSync, writeFileSync } from "fs";
 import { Sequelize } from "sequelize";
 import { default as _config } from "./config.json" with { "type": "json" };
 const { bot, discord, mysql } = _config;
-import { interactionEmbed, pages, toConsole } from "./functions.js";
+import { applyMuffle, interactionEmbed, pages, toConsole } from "./functions.js";
 const wait = await import("util").then((util) => util.promisify(setTimeout));
 let ready = false;
 const settingCache = new Map();
@@ -35,6 +35,7 @@ if(!existsSync("./models")) {
 }
 
 // Discord bot
+/** @type {Client} */
 const client = new Client({
   intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildModeration, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildMessageReactions],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
@@ -45,6 +46,7 @@ const client = new Client({
     }
   }
 });
+/** @type {SlashCommandBuilder[]} */
 const slashCommands = [];
 client.commands = new Collection();
 client.sequelize = sequelize;
@@ -81,22 +83,22 @@ client.on("clientReady", async () => {
   console.info(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at ${new Date()}`);
   toConsole(`[READY] Logged in as ${client.user.tag} (${client.user.id}) at <t:${Math.floor(Date.now()/1000)}:T>`, new Error().stack, client);
 
-  const now = Date.now();
-
   try {
     console.info("[APP-CMD] Started refreshing application (/) commands.");
-
+    const then = Date.now();
+    
     // Refresh based on environment
     const devGuild = await client.guilds.fetch(bot.guildId);
     if (!devGuild) {
       console.warn('[APP-CMD] Could not find the configured developer server');
     } else {
-      devGuild.commands.set(process.env.NODE_ENV === 'development' ? slashCommands : []);
+      await devGuild.commands.set(process.env.NODE_ENV === 'development' ? slashCommands : []);
       console.info("[APP-CMD] Successfully reloaded guild (/) commands.");
     }
     
-    const then = Date.now();
-    console.info(`[APP-CMD] Successfully reloaded global application (/) commands after ${then - now}ms.`);
+    await client.application.commands.set(slashCommands);
+    const now = Date.now();
+    console.info(`[APP-CMD] Successfully reloaded all application (/) commands after ${now - then}ms.`);
   } catch(error) {
     console.error("[APP-CMD] An error has occurred while attempting to refresh application commands.");
     console.error(`[APP-CMD] ${error}`);
@@ -145,8 +147,6 @@ client.on("interactionCreate", async (interaction) => {
       .then(m => {
         if(m.content === "" && m.embeds.length === 0) interactionEmbed(3, "[ERR-UNK]", "The command timed out and failed to reply in 10 seconds", interaction, client, [true, 15]);
       });
-  } else {
-    interaction.deferReply();
   }
 });
 
@@ -162,6 +162,10 @@ client.on("messageCreate", async (message) => {
    */
   if(!ready) return;
   if(!message.guild) return;
+
+  if (!message.author.bot) {
+    applyMuffle(client, message);
+  }
   
   let settings;
   const cache = settingCache.get(message.guild.id) ?? [0];

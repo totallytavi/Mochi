@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import { ActionRowBuilder, ButtonInteraction, ComponentType, Embed, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, Client, ComponentType, Embed, EmbedBuilder, Message, Webhook } from "discord.js";
 import { default as _config } from "./config.json" with { "type": "json" };
 const { discord } = _config;
 
@@ -15,6 +15,32 @@ const errors = {
   "[WARN-CMD]": "The requested slash command was not found",
   "[INFO-DEV]": "This command is in development. This should not be expected to work"
 };
+const MUFFLE_REPLACEMENTS = {
+  "dog": (text) => {
+    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/, (match) => {
+      if (match.startsWith("**")) {
+        return match.replaceAll(/\w+/g, 'growl')
+      } else if (match.startsWith("*")) {
+        return match.replaceAll(/\w+/g, 'whine')
+      } else {
+        return 'bark'
+      }
+    })
+  },
+  "cat": (text) => {
+    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/, (match) => {
+      if (match.startsWith("**")) {
+        return match.replaceAll(/\w+/g, 'hiss')
+      } else if (match.startsWith("*")) {
+        return match.replaceAll(/\w+/g, 'purr')
+      } else {
+        return 'meow'
+      }
+    })
+  },
+  // Standard does nothing, just adding for completeness
+  "standard": (text) => text
+}
 
 export async function toConsole(message, source, client) {
   if (!message || !source || !client) return console.error(`One or more of the required parameters are missing.\n\n> message: ${message}\n> source: ${source}\n> client: ${client}`);
@@ -141,6 +167,58 @@ export function parseTime(time) {
 
   return duration;
 }
+/**
+ * 
+ * @param {Client} client 
+ * @param {Message} message 
+ * @returns 
+ */
+export async function applyMuffle(client, message) {
+  if (message.content.startsWith('//')) {
+    return;
+  }
+  
+  if (!message.channel.permissionsFor(message.guild.members.me).has("ManageMessages")) {
+    return;
+  }
+
+  /** @type {Webhook} */
+  let webhook = await message.channel.fetchWebhooks()
+    .then((h) => h.find(wh => wh.owner.id === client.user.id));
+  if (!webhook) {
+    if (!message.channel.permissionsFor(message.guild.members.me).has("ManageWebhooks")) {
+      return;
+    }
+
+    webhook = await message.channel.createWebhook({
+      name: client.user.username,
+      avatar: client.user.displayAvatarURL({ dynamic: false })
+    });
+  }
+
+  if (!webhook) {
+    return;
+  }
+
+  const collar = await client.models.Collar.findOne({ where: { collared: message.author.id, guild: message.guild.id } });
+  if (!collar) {
+    return;
+  }
+
+  webhook.send({
+    content: MUFFLE_REPLACEMENTS[collar.type](message.content),
+    username: message.member.displayName || message.author.displayName || message.author.username,
+    avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false })
+  });
+  try {
+    message.delete();
+  } catch(_) {
+    // Logic (which I won't implement)
+  }
+  return;
+}
+
+
 export const pages = [
   new Embed({
     title: "Help | Page 1",

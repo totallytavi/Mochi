@@ -27,6 +27,7 @@ export async function run(client, interaction, options) {
   const discMember = options.getMember("user");
   if (discMember.user.id === interaction.user.id) return interactionEmbed(3, "[ERR-ARGS]", "You cannot collar yourself", interaction, client, [true, 10]);
   if (!discMember) return interactionEmbed(3, "[ERR-ARGS]", "That user does not exist in this server (Check your mutuals with them)", interaction, client, [true, 10]);
+  if (discMember.user.bot) return interactionEmbed(3, "[ERR-ARGS]", "You cannot collar bots (Nice try though)", interaction, client, [true, 10]);
 
   // Ensure the user is not already collared and they are not trying to 
   const check = await client.models.Collar.findOne({ where: { collared: discMember.user.id, guild: guildId } });
@@ -40,6 +41,7 @@ export async function run(client, interaction, options) {
       collared: discMember.user.id,
       owner: interaction.user.id,
       guild: guildId,
+      collarType: "standard",
       collaredAt: new Date()
     });
   } catch (e) {

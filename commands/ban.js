@@ -1,7 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 import { SlashCommandBuilder } from "discord.js";
-import { discord } from "../config.json" with { "type": "json" };
+import { default as _config } from "../config.json" with { "type": "json" };
 import { interactionEmbed, parseTime } from "../functions.js";
+const { discord } = _config;
 
 export const name = "ban";
 export const ephemeral = false;

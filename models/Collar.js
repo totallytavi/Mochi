@@ -25,6 +25,11 @@ const _import = (sequelize) => {
       allowNull: false,
       defaultValue: Sequelize.fn('now')
     },
+    collarType: {
+      type: DataTypes.TEXT('tiny'),
+      allowNull: false
+      // Acceptable values: dog, cat, standard
+    }
   });
 };
 export { _import as import };
