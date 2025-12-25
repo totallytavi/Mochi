@@ -100,6 +100,6 @@ export async function run(client, interaction, options) {
     }
     await timeout(1500);
     // Since moderation history may be sensitive, make sure it's ephemeral
-    interaction.followUp({ embeds: [embed2], ephemeral: true });
+    interaction.followUp({ embeds: [embed2], flags: ['Ephemeral'] });
   }
 }

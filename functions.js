@@ -17,7 +17,7 @@ const errors = {
 };
 const MUFFLE_REPLACEMENTS = {
   "dog": (text) => {
-    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/, (match) => {
+    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/g, (match) => {
       if (match.startsWith("**")) {
         return match.replaceAll(/\w+/g, 'growl')
       } else if (match.startsWith("*")) {
@@ -28,7 +28,7 @@ const MUFFLE_REPLACEMENTS = {
     })
   },
   "cat": (text) => {
-    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/, (match) => {
+    return text.replace(/((\*\*.+?\*\*)|(\*.+?\*)|(\w+))/g, (match) => {
       if (match.startsWith("**")) {
         return match.replaceAll(/\w+/g, 'hiss')
       } else if (match.startsWith("*")) {
@@ -124,12 +124,19 @@ export async function awaitButtons(interaction, time, buttons, content, remove) 
 
   // Create a filter
   /** @type {(i: ButtonInteraction) => boolean} */
-  const filter = i => {
+  const filter = async(i) => {
+    if (!i.deferred) {
+      try {
+        await i.deferReply();
+      } catch(_) {
+        // Ignore, index.js probably deferred it
+      }
+    }
     if (i.user.id === interaction.user.id) {
       return true;
     }
 
-    i.editReply('That is not your decision to make!');
+    await i.editReply('That is not your decision to make!');
     setTimeout(() => {
       i.deleteReply();
     }, 5000);
@@ -206,7 +213,7 @@ export async function applyMuffle(client, message) {
   }
 
   webhook.send({
-    content: MUFFLE_REPLACEMENTS[collar.type](message.content),
+    content: MUFFLE_REPLACEMENTS[collar.collarType](message.content),
     username: message.member.displayName || message.author.displayName || message.author.username,
     avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false })
   });

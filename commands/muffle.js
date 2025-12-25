@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
-import { SlashCommandBuilder } from "discord.js";
-import { interactionEmbed } from "../functions.js";
+import { ButtonBuilder, SlashCommandBuilder } from "discord.js";
+import { awaitButtons, interactionEmbed } from "../functions.js";
 
 export const name = "muffle";
 export const ephemeral = false;
@@ -48,7 +48,7 @@ export async function run(client, interaction, options) {
   // Alter the collar
   try {
     await client.models.Collar.update(
-      { type: collarType },
+      { collarType },
       {
         where: { collared: discMember.user.id }
       }
@@ -64,5 +64,6 @@ export async function run(client, interaction, options) {
 
   if (error) return;
 
-  interactionEmbed(1, "", "Successfully uncollared the user", interaction, client, [false, 0]);
+  discMember.user.send(`\`🔇\` Your collar's muffle type has been altered to **${collarType}** in **${interaction.guild.name}** by ${interaction.user.toString()}. Put \`\\\` at the beginning of your message to turn it off for that message only!`).catch(() => { });
+  interactionEmbed(1, "", "Successfully altered the user's muffle type", interaction, client, [false, 0]);
 }

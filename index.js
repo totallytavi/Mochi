@@ -133,8 +133,8 @@ client.on("interactionCreate", async (interaction) => {
   
   if(interaction.type === InteractionType.ApplicationCommand) {
     let command = client.commands.get(interaction.commandName);
-    await interaction.deferReply({ ephemeral: false });
-    // await interaction.deferReply({ ephemeral: command.ephemeral });
+    // await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ flags: command.ephemeral === true ? ['Ephemeral'] : [] });
     if(command) {
       command.run(client, interaction, interaction.options)
         .catch((e) => {
@@ -147,6 +147,8 @@ client.on("interactionCreate", async (interaction) => {
       .then(m => {
         if(m.content === "" && m.embeds.length === 0) interactionEmbed(3, "[ERR-UNK]", "The command timed out and failed to reply in 10 seconds", interaction, client, [true, 15]);
       });
+  } else {
+    interaction.deferReply();
   }
 });
 
