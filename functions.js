@@ -208,12 +208,12 @@ export async function applyMuffle(client, message) {
   }
 
   const collar = await client.models.Collar.findOne({ where: { collared: message.author.id, guild: message.guild.id } });
-  if (!collar) {
+  if (!collar || !collar.collarType || collar.collarType === 'standard') {
     return;
   }
 
   webhook.send({
-    content: MUFFLE_REPLACEMENTS[collar.collarType || 'standard'](message.content),
+    content: MUFFLE_REPLACEMENTS[collar.collarType](message.content),
     username: message.member.displayName || message.author.displayName || message.author.username,
     avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false })
   });
