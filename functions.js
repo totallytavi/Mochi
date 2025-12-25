@@ -213,7 +213,7 @@ export async function applyMuffle(client, message) {
   }
 
   webhook.send({
-    content: MUFFLE_REPLACEMENTS[collar.collarType](message.content),
+    content: MUFFLE_REPLACEMENTS[collar.collarType || 'standard'](message.content),
     username: message.member.displayName || message.author.displayName || message.author.username,
     avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false })
   });
