@@ -184,13 +184,18 @@ export async function applyMuffle(client, message) {
   if (message.content.startsWith('//')) {
     return;
   }
+
+  const channel = message.channel.isThread() ? message.channel.parent : message.channel;
+  if (!channel) {
+    return;
+  }
   
-  if (!message.channel.permissionsFor(message.guild.members.me).has("ManageMessages")) {
+  if (!channel.permissionsFor(message.guild.members.me).has("ManageMessages")) {
     return;
   }
 
   /** @type {Webhook} */
-  let webhook = await message.channel.fetchWebhooks()
+  let webhook = await channel.fetchWebhooks()
     .then((h) => h.find(wh => wh.owner.id === client.user.id));
   if (!webhook) {
     if (!message.channel.permissionsFor(message.guild.members.me).has("ManageWebhooks")) {
@@ -215,7 +220,8 @@ export async function applyMuffle(client, message) {
   webhook.send({
     content: MUFFLE_REPLACEMENTS[collar.collarType](message.content),
     username: message.member.displayName || message.author.displayName || message.author.username,
-    avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false })
+    avatarURL: message.member.displayAvatarURL({ dynamic: false }) || message.author.displayAvatarURL({ dynamic: false }),
+    threadId: message.channel.isThread() ? message.channel.id : undefined
   });
   try {
     message.delete();
