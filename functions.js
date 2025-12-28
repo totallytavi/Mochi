@@ -185,7 +185,9 @@ export async function applyMuffle(client, message) {
     return;
   }
 
-  const channel = message.channel.isThread() ? message.channel.parent : message.channel;
+  const channel = await (message.channel.isThread() ? message.channel.parent : message.channel)
+    .fetch()
+    .catch(() => null);
   if (!channel) {
     return;
   }
