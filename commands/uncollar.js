@@ -41,7 +41,7 @@ export async function run(client, interaction, options) {
 
   // Remove the collar
   try {
-    await client.models.Collar.destroy({ where: { collared: discMember.user.id } });
+    await check.destroy();
   } catch (e) {
     error = true;
     if (!e.errors) {
