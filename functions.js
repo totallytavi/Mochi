@@ -175,23 +175,22 @@ export function parseTime(time) {
   return duration;
 }
 /**
- * 
- * @param {Client} client 
- * @param {Message} message 
- * @returns 
+ *
+ * @param {Client} client
+ * @param {Message} message
+ * @returns
  */
 export async function applyMuffle(client, message) {
   if (message.content.startsWith('//')) {
     return;
   }
 
-  const channel = await (message.channel.isThread() ? message.channel.parent : message.channel)
-    .fetch()
-    .catch(() => null);
-  if (!channel) {
+  const channelId = message.channel.isThread() ? message.channel.parent.id : message.channel.id;
+  const channel = await client.channels.fetch(channelId);
+  if (!channel || !channel.viewable) {
     return;
   }
-  
+
   if (!channel.permissionsFor(message.guild.members.me).has("ManageMessages")) {
     return;
   }
@@ -200,11 +199,11 @@ export async function applyMuffle(client, message) {
   let webhook = await channel.fetchWebhooks()
     .then((h) => h.find(wh => wh.owner.id === client.user.id));
   if (!webhook) {
-    if (!message.channel.permissionsFor(message.guild.members.me).has("ManageWebhooks")) {
+    if (!channel.permissionsFor(message.guild.members.me).has("ManageWebhooks")) {
       return;
     }
 
-    webhook = await message.channel.createWebhook({
+    webhook = await channel.createWebhook({
       name: client.user.username,
       avatar: client.user.displayAvatarURL({ dynamic: false })
     });
